@@ -1,146 +1,116 @@
-// lab.js (Versione 1.0 - Logica Interattiva UI)
+// lab.js (Versione 2.0 - UI Completamente Interattiva)
 
 document.addEventListener('DOMContentLoaded', () => {
     // --- Riferimenti agli Elementi del DOM ---
-    const userPromptTextarea = document.getElementById('user-prompt');
-    const sendBtn = document.getElementById('send-btn');
-    const chatContainer = document.getElementById('chat-container');
-    const emptyState = document.querySelector('.chat-empty-state');
-    
-    const reviewPanel = document.getElementById('review-panel');
-    const closeReviewPanelBtn = document.getElementById('close-review-panel');
-    const approveFinalBtn = document.getElementById('approve-final-btn');
-    
-    // --- Gestione Stato UI ---
+    const mainToggle = document.getElementById('main-toggle');
+    const exceptionsSection = document.getElementById('exceptions-section');
+    const tagContainer = document.getElementById('tag-selector-container');
+    const tagInput = document.getElementById('exception-input');
+    const suggestionsPanel = document.getElementById('suggestions-panel');
 
-    // Abilita/Disabilita il pulsante di invio
-    userPromptTextarea.addEventListener('input', () => {
-        sendBtn.disabled = userPromptTextarea.value.trim() === '';
-    });
+    // --- Stato dell'Applicazione ---
+    let exceptionTags = new Set(['Celiachia']); // Un tag di esempio
+    const dietSuggestions = [
+        'Dieta Vegana', 'Dieta Vegetariana', 'Dieta Chetogenica',
+        'Intolleranza al Lattosio', 'Allergia alle noci', 'Favismo'
+    ];
 
-    // Mostra/Nascondi il pannello di revisione
-    function toggleReviewPanel(show = true) {
-        if (show) {
-            reviewPanel.classList.remove('hidden');
-        } else {
-            reviewPanel.classList.add('hidden');
+    // --- Funzioni di Rendering ---
+
+    // Funzione per disegnare i tag sullo schermo
+    function renderTags() {
+        // Rimuove tutti i tag esistenti tranne l'input
+        tagContainer.querySelectorAll('.tag-item').forEach(tag => tag.remove());
+
+        exceptionTags.forEach(tagText => {
+            const tagElement = document.createElement('span');
+            tagElement.className = 'tag-item';
+            tagElement.textContent = tagText;
+            
+            const removeIcon = document.createElement('i');
+            removeIcon.className = 'fa-solid fa-xmark';
+            removeIcon.dataset.tag = tagText; // Salva il nome del tag per la rimozione
+            
+            tagElement.appendChild(removeIcon);
+            tagContainer.insertBefore(tagElement, tagInput);
+        });
+    }
+
+    // Funzione per mostrare/nascondere e filtrare i suggerimenti
+    function renderSuggestions(filter = '') {
+        const filteredSuggestions = dietSuggestions.filter(diet => 
+            !exceptionTags.has(diet) && diet.toLowerCase().includes(filter.toLowerCase())
+        );
+
+        if (filteredSuggestions.length === 0 || filter === '') {
+            suggestionsPanel.classList.add('hidden');
+            return;
+        }
+
+        suggestionsPanel.innerHTML = '';
+        filteredSuggestions.forEach(diet => {
+            const item = document.createElement('div');
+            item.className = 'suggestion-item';
+            item.textContent = diet;
+            item.addEventListener('click', () => {
+                addTag(diet);
+                tagInput.value = '';
+                renderSuggestions();
+            });
+            suggestionsPanel.appendChild(item);
+        });
+        suggestionsPanel.classList.remove('hidden');
+    }
+
+    // Aggiunge un nuovo tag
+    function addTag(tagText) {
+        const text = tagText.trim();
+        if (text) {
+            exceptionTags.add(text);
+            renderTags();
         }
     }
 
-    // --- Funzioni della Chat ---
+    // --- Gestione Eventi ---
 
-    // Aggiunge un messaggio alla finestra della chat
-    function addMessageToChat(text, type = 'bot-proposal') {
-        if (emptyState) {
-            emptyState.remove(); // Rimuove lo stato iniziale vuoto
-        }
-
-        const messageWrapper = document.createElement('div');
-        messageWrapper.className = `chat-message-wrapper ${type}-wrapper`;
-
-        if (type.startsWith('bot')) {
-            const avatar = document.createElement('img');
-            avatar.src = 'https://i.imgur.com/nvfq69Y.png'; // Avatar del bot
-            avatar.className = 'chat-avatar';
-            messageWrapper.appendChild(avatar);
-        }
-
-        const bubble = document.createElement('div');
-        bubble.className = 'chat-bubble';
-
-        // Logica per gestire i diversi tipi di messaggi
-        switch(type) {
-            case 'user':
-                bubble.className += ' user';
-                bubble.textContent = text;
-                break;
-            
-            case 'bot-thinking':
-                bubble.className += ' bot';
-                bubble.innerHTML = '<div class="typing-indicator"><span></span><span></span><span></span></div>';
-                break;
-            
-            case 'bot-proposal':
-                bubble.className += ' bot proposal';
-                bubble.innerHTML = `
-                    <div class="proposal-source">[GEMINI] COACH MOTIVAZIONALE</div>
-                    <p>${text}</p>
-                    <div class="proposal-actions">
-                        <button class="btn-chat approve">✅ Approva</button>
-                        <button class="btn-chat edit">✏️ Modifica</button>
-                    </div>
-                `;
-                break;
-            
-            case 'bot-final':
-                bubble.className += ' bot final';
-                bubble.textContent = text;
-                break;
-        }
-
-        messageWrapper.appendChild(bubble);
-        chatContainer.appendChild(messageWrapper);
-        chatContainer.scrollTop = chatContainer.scrollHeight; // Scrolla fino all'ultimo messaggio
+    // 1. Attiva/disattiva la sezione eccezioni con l'interruttore principale
+    function toggleExceptions() {
+        exceptionsSection.classList.toggle('disabled', !mainToggle.checked);
     }
+    mainToggle.addEventListener('change', toggleExceptions);
 
-
-    // --- Gestione Eventi Principali ---
-
-    // Invio del messaggio
-    sendBtn.addEventListener('click', () => {
-        const promptText = userPromptTextarea.value.trim();
-        if (!promptText) return;
-
-        addMessageToChat(promptText, 'user');
-        userPromptTextarea.value = '';
-        sendBtn.disabled = true;
-
-        // Simula la "riflessione" del bot
-        const thinkingMessage = addMessageToChat('', 'bot-thinking');
-        
-        // Simula una risposta da Gemini dopo 2 secondi
-        setTimeout(() => {
-            // Rimuove l'indicatore "sta pensando"
-            thinkingMessage.remove(); 
-            // Mostra la proposta di risposta
-            addMessageToChat(
-                "Certo, è normale sentirsi così! Ricorda che il peso fluttua per tanti motivi. Concentriamoci sulle buone abitudini che hai mantenuto questa settimana!", 
-                'bot-proposal'
-            );
-        }, 2000);
-    });
-
-    // Gestione dei click all'interno della chat (Delegation)
-    chatContainer.addEventListener('click', (event) => {
-        const target = event.target;
-
-        // Se clicco su "Modifica"
-        if (target.classList.contains('edit')) {
-            toggleReviewPanel(true);
-            // Qui in futuro popoleremo il pannello destro con i dati veri
+    // 2. Aggiunge un tag quando si preme Invio
+    tagInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+            e.preventDefault(); // Impedisce di andare a capo
+            addTag(tagInput.value);
+            tagInput.value = '';
+            suggestionsPanel.classList.add('hidden');
         }
-
-        // Se clicco su "Approva"
-        if (target.classList.contains('approve')) {
-            const proposalWrapper = target.closest('.chat-message-wrapper');
-            const proposalText = proposalWrapper.querySelector('p').textContent;
-            
-            // Sostituisce la proposta con la risposta finale
-            proposalWrapper.remove();
-            addMessageToChat(proposalText, 'bot-final');
-        }
-    });
-
-    // Chiusura del pannello di revisione
-    closeReviewPanelBtn.addEventListener('click', () => {
-        toggleReviewPanel(false);
     });
     
-    // Approvazione dal pannello di revisione
-    approveFinalBtn.addEventListener('click', () => {
-        // Logica fittizia per ora
-        console.log("Risposta approvata dal pannello di modifica!");
-        toggleReviewPanel(false);
+    // 3. Mostra i suggerimenti mentre si digita
+    tagInput.addEventListener('input', () => {
+        renderSuggestions(tagInput.value);
     });
 
+    // 4. Rimuove un tag quando si clicca sulla 'x'
+    tagContainer.addEventListener('click', (e) => {
+        if (e.target.tagName === 'I') {
+            const tagToRemove = e.target.dataset.tag;
+            exceptionTags.delete(tagToRemove);
+            renderTags();
+        }
+    });
+    
+    // 5. Nasconde i suggerimenti se si clicca fuori
+    document.addEventListener('click', (e) => {
+        if (!e.target.closest('.tag-selector-wrapper')) {
+            suggestionsPanel.classList.add('hidden');
+        }
+    });
+
+    // --- Inizializzazione ---
+    renderTags();       // Disegna i tag iniziali
+    toggleExceptions(); // Imposta lo stato iniziale della sezione eccezioni
 });

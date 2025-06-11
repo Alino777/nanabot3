@@ -50,12 +50,15 @@
                     <p class="input-description">
                         Escludi l'assistente per i pazienti che seguono diete specifiche.
                     </p>
-                    <div id="tag-selector-container" class="tag-selector-container">
-                        <!-- I tag verranno aggiunti qui da JavaScript -->
-                        <span class="tag-item">Celiachia <i class="fa-solid fa-xmark"></i></span>
-                        <input type="text" id="exception-input" placeholder="Aggiungi una dieta...">
+                    <div class="tag-selector-wrapper">
+                        <div id="tag-selector-container" class="tag-selector-container">
+                            <!-- I tag verranno aggiunti qui da JavaScript -->
+                            <input type="text" id="exception-input" placeholder="Aggiungi una dieta...">
+                        </div>
+                        <!-- Contenitore per i suggerimenti, inizialmente nascosto -->
+                        <div id="suggestions-panel" class="suggestions-panel hidden"></div>
                     </div>
-                </div>
+                </div>                
             </div>
                 <p class="input-description">
                     Messaggio di benvenuto (usa <code>{nome_paziente}</code>)
