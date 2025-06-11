@@ -1,18 +1,117 @@
-// lab.js (Versione 3.0 - Con logica per la modale)
+// lab.js (Versione Finale UI)
 
 document.addEventListener('DOMContentLoaded', () => {
-    // --- Riferimenti agli Elementi del DOM per la Modale ---
+    // --- Stato dell'Applicazione ---
+    let state = {
+        assistantEnabled: true,
+        exceptions: new Set(['Celiachia']), // Dati di esempio
+        welcomeMessage: "Ciao {nome_paziente}! Sono il tuo assistente virtuale...",
+        quickQuestions: [
+            { id: 1, q: "Cosa posso mangiare a colazione?", a: "Per colazione, consiglio yogurt greco con frutta fresca e una manciata di mandorle." },
+            { id: 2, q: "Quali sono gli spuntini permessi?", a: "Ottimi spuntini includono frutta, verdura cruda, o una piccola porzione di frutta secca." }
+        ],
+        selectedPatient: "Mario Rossi"
+    };
+
+    // --- Riferimenti agli Elementi del DOM ---
+    const mainToggle = document.getElementById('main-toggle');
+    const exceptionsSection = document.getElementById('exceptions-section');
+    const tagContainer = document.getElementById('tag-selector-container');
+    const tagInput = document.getElementById('exception-input');
+    const suggestionsPanel = document.getElementById('suggestions-panel');
+    const welcomeMessageTextarea = document.getElementById('welcome-message');
+    const quickQuestionList = document.getElementById('quick-question-list');
     const addQuestionBtn = document.getElementById('add-quick-question-btn');
+    const patientSelect = document.getElementById('patient-select');
+    const previewWelcomeMessage = document.getElementById('preview-welcome-message');
+    const previewQuickReplies = document.getElementById('preview-quick-replies');
+    
+    // Modale
     const modalOverlay = document.getElementById('add-question-modal');
+    const modalTitle = document.getElementById('modal-title');
     const closeModalBtn = document.getElementById('close-modal-btn');
     const cancelModalBtn = document.getElementById('cancel-modal-btn');
     const saveModalBtn = document.getElementById('save-modal-btn');
     const modalQuestionTextarea = document.getElementById('modal-question');
     const modalAnswerTextarea = document.getElementById('modal-answer');
+    let editingQuestionId = null; // Per sapere se stiamo aggiungendo o modificando
 
-    // --- Funzioni per la Modale ---
+    // --- Funzioni di Rendering e Logica ---
 
-    function openModal() {
+    // Renderizza l'intera UI basandosi sullo stato
+    function render() {
+        // 1. Attivazione ed Eccezioni
+        mainToggle.checked = state.assistantEnabled;
+        exceptionsSection.classList.toggle('disabled', !state.assistantEnabled);
+        
+        tagContainer.querySelectorAll('.tag-item').forEach(tag => tag.remove());
+        state.exceptions.forEach(tagText => {
+            const tagElement = createTagElement(tagText);
+            tagContainer.insertBefore(tagElement, tagInput);
+        });
+
+        // 2. Messaggio di benvenuto
+        welcomeMessageTextarea.value = state.welcomeMessage;
+
+        // 3. Domande Rapide
+        quickQuestionList.innerHTML = '';
+        state.quickQuestions.forEach(qq => {
+            const item = document.createElement('div');
+            item.className = 'quick-question-item';
+            item.innerHTML = `
+                <span>${qq.q}</span>
+                <div class="actions">
+                    <i class="fa-solid fa-pencil" data-id="${qq.id}"></i>
+                    <i class="fa-solid fa-trash-can" data-id="${qq.id}"></i>
+                </div>
+            `;
+            quickQuestionList.appendChild(item);
+        });
+        
+        // 4. Anteprima Live
+        renderPreview();
+    }
+
+    // Renderizza solo la sezione di anteprima
+    function renderPreview() {
+        const patientName = state.selectedPatient;
+        previewWelcomeMessage.textContent = state.welcomeMessage.replace('{nome_paziente}', patientName.split(' ')[0]);
+
+        previewQuickReplies.innerHTML = '';
+        state.quickQuestions.forEach(qq => {
+            const btn = document.createElement('button');
+            btn.className = 'quick-reply-btn';
+            btn.textContent = qq.q;
+            previewQuickReplies.appendChild(btn);
+        });
+    }
+
+    // Crea un elemento 'tag'
+    function createTagElement(text) {
+        const tagElement = document.createElement('span');
+        tagElement.className = 'tag-item';
+        tagElement.textContent = text;
+        const removeIcon = document.createElement('i');
+        removeIcon.className = 'fa-solid fa-xmark';
+        removeIcon.dataset.tag = text;
+        tagElement.appendChild(removeIcon);
+        return tagElement;
+    }
+    
+    // Logica per la modale
+    function openModal(mode = 'add', id = null) {
+        editingQuestionId = id;
+        if (mode === 'edit') {
+            const questionToEdit = state.quickQuestions.find(qq => qq.id === id);
+            modalTitle.textContent = "Modifica Domanda Rapida";
+            modalQuestionTextarea.value = questionToEdit.q;
+            modalAnswerTextarea.value = questionToEdit.a;
+        } else {
+            modalTitle.textContent = "Aggiungi Domanda Rapida";
+            modalQuestionTextarea.value = '';
+            modalAnswerTextarea.value = '';
+        }
+        checkModalInputs();
         modalOverlay.classList.remove('hidden');
     }
 
@@ -20,94 +119,81 @@ document.addEventListener('DOMContentLoaded', () => {
         modalOverlay.classList.add('hidden');
     }
 
-    // Controlla se entrambi i campi della modale sono stati riempiti
     function checkModalInputs() {
-        const question = modalQuestionTextarea.value.trim();
-        const answer = modalAnswerTextarea.value.trim();
-        saveModalBtn.disabled = !(question && answer);
+        saveModalBtn.disabled = !(modalQuestionTextarea.value.trim() && modalAnswerTextarea.value.trim());
     }
 
-    // --- Gestione Eventi per la Modale ---
+    // --- Gestione Eventi ---
 
-    // Apre la modale
-    addQuestionBtn.addEventListener('click', openModal);
+    mainToggle.addEventListener('change', (e) => {
+        state.assistantEnabled = e.target.checked;
+        render();
+    });
 
-    // Chiude la modale
-    closeModalBtn.addEventListener('click', closeModal);
-    cancelModalBtn.addEventListener('click', closeModal);
-    modalOverlay.addEventListener('click', (event) => {
-        // Chiude la modale solo se si clicca sullo sfondo grigio (overlay)
-        if (event.target === modalOverlay) {
-            closeModal();
+    tagContainer.addEventListener('click', (e) => {
+        if (e.target.tagName === 'I') {
+            state.exceptions.delete(e.target.dataset.tag);
+            render();
+        }
+    });
+
+    tagInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            const newTag = e.target.value.trim();
+            if (newTag) {
+                state.exceptions.add(newTag);
+                e.target.value = '';
+                render();
+            }
         }
     });
     
-    // Abilita il pulsante Salva
+    welcomeMessageTextarea.addEventListener('input', (e) => {
+        state.welcomeMessage = e.target.value;
+        renderPreview();
+    });
+
+    quickQuestionList.addEventListener('click', (e) => {
+        const id = parseInt(e.target.dataset.id, 10);
+        if (e.target.classList.contains('fa-pencil')) {
+            openModal('edit', id);
+        }
+        if (e.target.classList.contains('fa-trash-can')) {
+            if (confirm('Sei sicuro di voler eliminare questa domanda?')) {
+                state.quickQuestions = state.quickQuestions.filter(qq => qq.id !== id);
+                render();
+            }
+        }
+    });
+
+    patientSelect.addEventListener('change', (e) => {
+        state.selectedPatient = e.target.value;
+        renderPreview();
+    });
+    
+    // Eventi della Modale
+    addQuestionBtn.addEventListener('click', () => openModal('add'));
+    closeModalBtn.addEventListener('click', closeModal);
+    cancelModalBtn.addEventListener('click', closeModal);
+    modalOverlay.addEventListener('click', (e) => { if (e.target === modalOverlay) closeModal(); });
     modalQuestionTextarea.addEventListener('input', checkModalInputs);
     modalAnswerTextarea.addEventListener('input', checkModalInputs);
-
-    // Gestione fittizia del salvataggio
+    
     saveModalBtn.addEventListener('click', () => {
         const question = modalQuestionTextarea.value.trim();
         const answer = modalAnswerTextarea.value.trim();
-        console.log('Domanda da salvare:', question);
-        console.log('Risposta da salvare:', answer);
-        
-        // Svuota i campi e chiude la modale
-        modalQuestionTextarea.value = '';
-        modalAnswerTextarea.value = '';
+        if (editingQuestionId) {
+            const index = state.quickQuestions.findIndex(qq => qq.id === editingQuestionId);
+            state.quickQuestions[index] = { id: editingQuestionId, q: question, a: answer };
+        } else {
+            const newId = state.quickQuestions.length > 0 ? Math.max(...state.quickQuestions.map(q => q.id)) + 1 : 1;
+            state.quickQuestions.push({ id: newId, q: question, a: answer });
+        }
+        render();
         closeModal();
-
-        // Qui in futuro aggiungeremo la domanda alla lista nell'interfaccia
-        alert('Domanda salvata (simulazione)'); 
     });
 
-
-    // --- (Il codice per le regole di attivazione che abbiamo scritto prima rimane qui) ---
-    const mainToggle = document.getElementById('main-toggle');
-    const exceptionsSection = document.getElementById('exceptions-section');
-    if (mainToggle && exceptionsSection) { // Aggiungiamo un controllo per sicurezza
-        const tagContainer = document.getElementById('tag-selector-container');
-        const tagInput = document.getElementById('exception-input');
-        const suggestionsPanel = document.getElementById('suggestions-panel');
-
-        let exceptionTags = new Set(['Celiachia']);
-        const dietSuggestions = ['Dieta Vegana', 'Dieta Vegetariana', 'Dieta Chetogenica', 'Intolleranza al Lattosio', 'Allergia alle noci', 'Favismo'];
-        
-        function renderTags() {
-            tagContainer.querySelectorAll('.tag-item').forEach(tag => tag.remove());
-            exceptionTags.forEach(tagText => {
-                const tagElement = document.createElement('span');
-                tagElement.className = 'tag-item';
-                tagElement.textContent = tagText;
-                const removeIcon = document.createElement('i');
-                removeIcon.className = 'fa-solid fa-xmark';
-                removeIcon.dataset.tag = tagText;
-                tagElement.appendChild(removeIcon);
-                tagContainer.insertBefore(tagElement, tagInput);
-            });
-        }
-        function renderSuggestions(filter = '') {
-            const filteredSuggestions = dietSuggestions.filter(diet => !exceptionTags.has(diet) && diet.toLowerCase().includes(filter.toLowerCase()));
-            if (filteredSuggestions.length === 0 || filter === '') { suggestionsPanel.classList.add('hidden'); return; }
-            suggestionsPanel.innerHTML = '';
-            filteredSuggestions.forEach(diet => {
-                const item = document.createElement('div');
-                item.className = 'suggestion-item';
-                item.textContent = diet;
-                item.addEventListener('click', () => { addTag(diet); tagInput.value = ''; renderSuggestions(); });
-                suggestionsPanel.appendChild(item);
-            });
-            suggestionsPanel.classList.remove('hidden');
-        }
-        function addTag(tagText) { const text = tagText.trim(); if (text) { exceptionTags.add(text); renderTags(); } }
-        function toggleExceptions() { exceptionsSection.classList.toggle('disabled', !mainToggle.checked); }
-        mainToggle.addEventListener('change', toggleExceptions);
-        tagInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); addTag(tagInput.value); tagInput.value = ''; suggestionsPanel.classList.add('hidden'); } });
-        tagInput.addEventListener('input', () => { renderSuggestions(tagInput.value); });
-        tagContainer.addEventListener('click', (e) => { if (e.target.tagName === 'I') { const tagToRemove = e.target.dataset.tag; exceptionTags.delete(tagToRemove); renderTags(); } });
-        document.addEventListener('click', (e) => { if (!e.target.closest('.tag-selector-wrapper')) { suggestionsPanel.classList.add('hidden'); } });
-        renderTags();
-        toggleExceptions();
-    }
+    // --- Inizializzazione ---
+    render();
 });
