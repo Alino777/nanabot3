@@ -1,8 +1,9 @@
-// script.js (Versione 5.4 - Finale e Corretta)
+/// script.js (Versione Finale - Pronta per il Deploy)
 
 document.addEventListener('DOMContentLoaded', () => {
     const app = document.getElementById('app');
-    const API_BASE_URL = 'http://127.0.0.1:5001';
+    // Correzione Critica: L'URL viene reso relativo per funzionare sia in locale che su Vercel.
+    const API_BASE_URL = ''; 
     let philosophyOptions = {};
 
     // -------------------------------------------------------------------
@@ -202,8 +203,6 @@ document.addEventListener('DOMContentLoaded', () => {
         
         document.getElementById('start-mission-4-btn').addEventListener('click', () => {
             const firstTheme = status.themes_todo[0];
-            // --- QUESTA È LA RIGA CORRETTA ---
-            // Passiamo 'status' alla funzione successiva, risolvendo il bug.
             if (firstTheme) renderPhilosophyMission(container, firstTheme, status);
         });
     }

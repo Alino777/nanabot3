@@ -1,9 +1,10 @@
-# app.py (Versione 5.1 - Finale)
-
-from flask import Flask, jsonify, request
+# --- 1. IMPORT NECESSARI ---
+from flask import Flask, jsonify, request, render_template
 from flask_cors import CORS
 
-# --- DATI E CLASSE ---
+# --- 2. DATI E CLASSE DI LOGICA ---
+# Qui definiamo le opzioni filosofiche e la classe che gestisce lo stato del Nanabot.
+
 PHILOSOPHY_OPTIONS = {
     "Gestione dello Sgarro": {
         "A": "[METODICO SCIENTIFICO] Lo 'sgarro' è un dato. Analizziamolo per compensare il bilancio calorico settimanale senza impatti.",
@@ -34,69 +35,126 @@ THEMES = list(PHILOSOPHY_OPTIONS.keys())
 
 class DigitalAssistant:
     def __init__(self, name="Nanabot"):
-        self.name = name; self.level = 1; self.training_progress = 0; self.unlocked_badges = []; self.philosophy = {}
-        self.config = { 
-            "sources": [], 
+        self.name = name
+        self.level = 1
+        self.training_progress = 0
+        self.unlocked_badges = []
+        self.philosophy = {}
+        self.config = {
+            "sources": [],
             "security": {
-                "keywords": ["diabete", "gravidanza", "farmaco", "dolore"], 
+                "keywords": ["diabete", "gravidanza", "farmaco", "dolore"],
                 "coherence_checks": {
-                    "Celiachia (Senza Glutine)": True, 
+                    "Celiachia (Senza Glutine)": True,
                     "Dieta Vegana": True,
                     "Dieta Vegetariana": True,
                     "Intolleranza al Lattosio": True,
                     "Allergie Note": False,
                     "Favismo": False
                 }
-            }, 
-            "resources": {"patient_plans": True, "my_content": True, "external_content": False} 
+            },
+            "resources": {"patient_plans": True, "my_content": True, "external_content": False}
         }
+
     def complete_mission(self, mission_number, data):
         if mission_number == 1 and "🏅 Guardiano della Scienza" not in self.unlocked_badges:
-            self.training_progress += 25; self.add_badge("🏅 Guardiano della Scienza"); self.config["sources"] = data.get("sources", [])
+            self.training_progress += 25
+            self.add_badge("🏅 Guardiano della Scienza")
+            self.config["sources"] = data.get("sources", [])
             return "Perfetto! D'ora in poi Nanabot si baserà solo sui dati scientifici che hai approvato."
+        
         elif mission_number == 2 and "🛡️ Sentinella della Salute" not in self.unlocked_badges:
-            self.training_progress += 25; self.add_badge("🛡️ Sentinella della Salute"); self.config["security"] = data
+            self.training_progress += 25
+            self.add_badge("🛡️ Sentinella della Salute")
+            self.config["security"] = data
             return "Ottimo! Le antenne di Nanabot ora sono sintonizzate per intercettare le informazioni critiche."
-        elif mission_number == 3 and "🚀 Motore Proattivo" not in self.unlocked_badges:
-            self.training_progress += 25; self.add_badge("🚀 Motore Proattivo"); self.config["resources"] = data
-            return "Fantastico! Hai dato a Nanabot le chiavi della tua 'dispensa di sapienza'."
-        return None
-    def set_philosophy(self, theme, choice_key):
-        if len(self.philosophy) < len(THEMES): self.philosophy[theme] = PHILOSOPHY_OPTIONS[theme][choice_key]
-        if len(self.philosophy) == len(THEMES) and "🏆 Master Trainer" not in self.unlocked_badges:
-            self.training_progress = 100; self.add_badge("🏆 Master Trainer")
-            return "Congratulazioni, Master Trainer! La personalità di Nanabot è forgiata a tua immagine e somiglianza."
-        return None
-    def add_badge(self, badge: str):
-        if badge not in self.unlocked_badges: self.unlocked_badges.append(badge)
-    def get_status(self):
-        return {'name': self.name, 'progress': self.training_progress, 'badges': self.unlocked_badges, 'philosophy': self.philosophy, 'config': self.config, 'themes_todo': [t for t in THEMES if t not in self.philosophy]}
 
-# --- FLASK APP ---
+        elif mission_number == 3 and "🚀 Motore Proattivo" not in self.unlocked_badges:
+            self.training_progress += 25
+            self.add_badge("🚀 Motore Proattivo")
+            self.config["resources"] = data
+            return "Fantastico! Hai dato a Nanabot le chiavi della tua 'dispensa di sapienza'."
+        
+        return None
+
+    def set_philosophy(self, theme, choice_key):
+        if len(self.philosophy) < len(THEMES):
+            self.philosophy[theme] = PHILOSOPHY_OPTIONS[theme][choice_key]
+        
+        if len(self.philosophy) == len(THEMES) and "🏆 Master Trainer" not in self.unlocked_badges:
+            self.training_progress = 100
+            self.add_badge("🏆 Master Trainer")
+            return "Congratulazioni, Master Trainer! La personalità di Nanabot è forgiata a tua immagine e somiglianza."
+        
+        return None
+
+    def add_badge(self, badge: str):
+        if badge not in self.unlocked_badges:
+            self.unlocked_badges.append(badge)
+
+    def get_status(self):
+        return {
+            'name': self.name,
+            'progress': self.training_progress,
+            'badges': self.unlocked_badges,
+            'philosophy': self.philosophy,
+            'config': self.config,
+            'themes_todo': [t for t in THEMES if t not in self.philosophy]
+        }
+
+# --- 3. INIZIALIZZAZIONE DELL'APP FLASK ---
+# Vercel cerca questa variabile 'app' per eseguire il codice.
 app = Flask(__name__)
 CORS(app, resources={r"/api/*": {"origins": "*"}})
+
+# Crea un'istanza del nostro assistente.
+# ATTENZIONE: In un ambiente serverless, questa memoria è volatile.
 nanabot = DigitalAssistant()
 
+
+# --- 4. DEFINIZIONE DELLE ROTTE ---
+
+# Rotta principale per servire la pagina HTML (la "vetrina" dell'applicazione)
+@app.route('/')
+def home():
+    """Questa rotta serve la pagina HTML principale."""
+    return render_template('index.html')
+
+# --- Rotte API per la logica del chatbot ---
+
 @app.route('/api/status')
-def status(): return jsonify(nanabot.get_status())
+def status():
+    return jsonify(nanabot.get_status())
+
 @app.route('/api/philosophy_options')
-def philosophy_options(): return jsonify(PHILOSOPHY_OPTIONS)
+def philosophy_options():
+    return jsonify(PHILOSOPHY_OPTIONS)
 
 @app.route('/api/complete_mission/<int:mission_number>', methods=['POST'])
 def handle_mission_completion(mission_number):
     message = nanabot.complete_mission(mission_number, request.get_json())
-    return jsonify({'success': True, 'message': message}) if message else (jsonify({'success': False, 'message': 'Missione già completata o dati non validi'}), 400)
+    if message:
+        return jsonify({'success': True, 'message': message})
+    else:
+        return jsonify({'success': False, 'message': 'Missione già completata o dati non validi'}), 400
 
 @app.route('/api/select_philosophy', methods=['POST'])
 def handle_philosophy_selection():
     data = request.get_json()
-    message = nanabot.set_philosophy(data.get('theme'), data.get('choice'))
+    theme = data.get('theme')
+    choice = data.get('choice')
+    message = nanabot.set_philosophy(theme, choice)
     return jsonify({'success': True, 'message': message, 'final_mission_complete': bool(message)})
 
 @app.route('/api/reset', methods=['POST'])
 def reset():
-    global nanabot; nanabot = DigitalAssistant()
+    global nanabot
+    nanabot = DigitalAssistant()
     return jsonify({'success': True, 'message': 'Addestramento resettato!'})
 
+
+# --- 5. ESECUZIONE PER TEST IN LOCALE ---
+# Questo blocco viene eseguito solo quando avvii il file con "python app.py" sul tuo computer.
+# Vercel lo ignora completamente.
 if __name__ == '__main__':
     app.run(debug=True, port=5001)
