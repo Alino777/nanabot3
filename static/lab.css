@@ -146,3 +146,54 @@ input:checked + .slider:before { transform: translateX(22px); }
     .main-container { flex-direction: column; }
     .preview-panel { position: static; }
 }
+
+/* Stili aggiuntivi per la Card Impostazioni */
+
+.settings-actions-group {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    margin-top: 1.5rem;
+}
+
+.action-row {
+    display: flex;
+    flex-direction: column;
+}
+
+.action-row .btn {
+    width: fit-content; /* Il pulsante si adatta al suo contenuto */
+    margin: 0;
+}
+
+.action-description {
+    font-size: 0.9rem;
+    color: var(--medium-text);
+    margin-top: 0.5rem;
+    padding-left: 0.2rem;
+}
+
+.danger-zone {
+    margin-top: 1rem;
+}
+
+.btn-danger-outline {
+    background-color: transparent;
+    border: 1px solid #e53e3e;
+    color: #e53e3e;
+}
+.btn-danger-outline:hover {
+    background-color: #fff5f5;
+    border-color: #c53030;
+    color: #c53030;
+}
+
+/* Stili per il corpo della Modale */
+.modal-body .form-group {
+    margin-bottom: 1.5rem;
+}
+.modal-body .form-group label {
+    display: block;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+}
