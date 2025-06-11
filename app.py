@@ -35,36 +35,74 @@ THEMES = list(PHILOSOPHY_OPTIONS.keys())
 
 class DigitalAssistant:
     def __init__(self, name="Nanabot"):
+        # RIPRISTINO: __init__ ora imposta solo lo stato iniziale pulito.
         self.name = name
         self.training_progress = 0
         self.unlocked_badges = []
         self.philosophy = {}
-        # SOLUZIONE: Se la filosofia è vuota, usiamo dei valori di default per il test.
-        if not self.philosophy:
-             self.philosophy = {
-                "Gestione dello Sgarro": PHILOSOPHY_OPTIONS["Gestione dello Sgarro"]["B"],
-                "Motivazione": PHILOSOPHY_OPTIONS["Motivazione"]["B"],
-                "Vita Sociale": PHILOSOPHY_OPTIONS["Vita Sociale"]["D"],
-                "Integrazione": PHILOSOPHY_OPTIONS["Integrazione"]["C"]
-            }
+        # RIPRISTINO: Aggiungo di nuovo la configurazione iniziale, necessaria per le missioni.
+        self.config = {
+            "sources": [],
+            "security": {
+                "keywords": ["diabete", "gravidanza", "farmaco", "dolore"],
+                "coherence_checks": {
+                    "Celiachia (Senza Glutine)": True,
+                    "Dieta Vegana": True,
+                    "Dieta Vegetariana": True,
+                    "Intolleranza al Lattosio": True,
+                    "Allergie Note": False,
+                    "Favismo": False
+                }
+            },
+            "resources": {"patient_plans": True, "my_content": True, "external_content": False}
+        }
 
     def complete_mission(self, mission_number, data):
-        if mission_number == 1 and "🏅 Guardiano della Scienza" not in self.unlocked_badges: self.training_progress += 25; self.add_badge("🏅 Guardiano della Scienza"); self.config["sources"] = data.get("sources", []); return "Perfetto! D'ora in poi Nanabot si baserà solo sui dati scientifici che hai approvato."
-        elif mission_number == 2 and "🛡️ Sentinella della Salute" not in self.unlocked_badges: self.training_progress += 25; self.add_badge("🛡️ Sentinella della Salute"); self.config["security"] = data; return "Ottimo! Le antenne di Nanabot ora sono sintonizzate per intercettare le informazioni critiche."
-        elif mission_number == 3 and "🚀 Motore Proattivo" not in self.unlocked_badges: self.training_progress += 25; self.add_badge("🚀 Motore Proattivo"); self.config["resources"] = data; return "Fantastico! Hai dato a Nanabot le chiavi della tua 'dispensa di sapienza'."
+        if mission_number == 1 and "🏅 Guardiano della Scienza" not in self.unlocked_badges:
+            self.training_progress += 25
+            self.add_badge("🏅 Guardiano della Scienza")
+            self.config["sources"] = data.get("sources", [])
+            return "Perfetto! D'ora in poi Nanabot si baserà solo sui dati scientifici che hai approvato."
+        
+        elif mission_number == 2 and "🛡️ Sentinella della Salute" not in self.unlocked_badges:
+            self.training_progress += 25
+            self.add_badge("🛡️ Sentinella della Salute")
+            self.config["security"] = data
+            return "Ottimo! Le antenne di Nanabot ora sono sintonizzate per intercettare le informazioni critiche."
+
+        elif mission_number == 3 and "🚀 Motore Proattivo" not in self.unlocked_badges:
+            self.training_progress += 25
+            self.add_badge("🚀 Motore Proattivo")
+            self.config["resources"] = data
+            return "Fantastico! Hai dato a Nanabot le chiavi della tua 'dispensa di sapienza'."
+        
         return None
     
     def set_philosophy(self, theme, choice_key):
-        if len(self.philosophy) < len(THEMES): self.philosophy[theme] = PHILOSOPHY_OPTIONS[theme][choice_key]
-        if len(self.philosophy) == len(THEMES) and "🏆 Master Trainer" not in self.unlocked_badges: self.training_progress = 100; self.add_badge("🏆 Master Trainer"); return "Congratulazioni, Master Trainer! La personalità di Nanabot è forgiata a tua immagine e somiglianza."
+        if len(self.philosophy) < len(THEMES):
+            self.philosophy[theme] = PHILOSOPHY_OPTIONS[theme][choice_key]
+        
+        if len(self.philosophy) == len(THEMES) and "🏆 Master Trainer" not in self.unlocked_badges:
+            self.training_progress = 100
+            self.add_badge("🏆 Master Trainer")
+            return "Congratulazioni, Master Trainer! La personalità di Nanabot è forgiata a tua immagine e somiglianza."
+        
         return None
         
     def add_badge(self, badge: str):
-        if badge not in self.unlocked_badges: self.unlocked_badges.append(badge)
+        if badge not in self.unlocked_badges:
+            self.unlocked_badges.append(badge)
         
     def get_status(self):
-        return { 'name': self.name, 'progress': self.training_progress, 'badges': self.unlocked_badges, 'philosophy': self.philosophy, 'config': {}, 'themes_todo': [t for t in THEMES if t not in self.philosophy]}
-
+        # RIPRISTINO: Ora get_status restituisce la configurazione corretta.
+        return {
+            'name': self.name,
+            'progress': self.training_progress,
+            'badges': self.unlocked_badges,
+            'philosophy': self.philosophy,
+            'config': self.config,
+            'themes_todo': [t for t in THEMES if t not in self.philosophy]
+        }
 
 # --- INIZIALIZZAZIONE APP ---
 app = Flask(__name__)
@@ -74,7 +112,6 @@ nanabot = DigitalAssistant()
 # --- ROTTE PER ENTRAMBE LE APP ---
 @app.route('/')
 def training_app():
-    # RIPRISTINATO: Questa rotta ora serve l'addestramento.
     return render_template('index.html')
 
 @app.route('/lab')
@@ -84,15 +121,27 @@ def supervision_lab():
 # --- API PER ADDESTRAMENTO ---
 @app.route('/api/status', methods=['GET'])
 def status(): return jsonify(nanabot.get_status())
-# ... (le altre API di addestramento sono state omesse per brevità, ma nel tuo file ci sono)
+
 @app.route('/api/philosophy_options')
 def philosophy_options(): return jsonify(PHILOSOPHY_OPTIONS)
+
 @app.route('/api/complete_mission/<int:mission_number>', methods=['POST'])
-def handle_mission_completion(mission_number): message = nanabot.complete_mission(mission_number, request.get_json()); return jsonify({'success': True, 'message': message}) if message else (jsonify({'success': False, 'message': 'Missione già completata o dati non validi'}), 400)
+def handle_mission_completion(mission_number):
+    message = nanabot.complete_mission(mission_number, request.get_json())
+    if message: return jsonify({'success': True, 'message': message})
+    return jsonify({'success': False, 'message': 'Missione già completata o dati non validi'}), 400
+
 @app.route('/api/select_philosophy', methods=['POST'])
-def handle_philosophy_selection(): data = request.get_json(); message = nanabot.set_philosophy(data.get('theme'), data.get('choice')); return jsonify({'success': True, 'message': message, 'final_mission_complete': bool(message)})
+def handle_philosophy_selection():
+    data = request.get_json()
+    message = nanabot.set_philosophy(data.get('theme'), data.get('choice'))
+    return jsonify({'success': True, 'message': message, 'final_mission_complete': bool(message)})
+
 @app.route('/api/reset', methods=['POST'])
-def reset(): global nanabot; nanabot = DigitalAssistant(); return jsonify({'success': True, 'message': 'Addestramento resettato!'})
+def reset():
+    global nanabot
+    nanabot = DigitalAssistant()
+    return jsonify({'success': True, 'message': 'Addestramento resettato!'})
 
 # --- API PER LA CHAT CON GEMINI ---
 @app.route('/api/ask', methods=['POST'])
@@ -102,7 +151,13 @@ def ask_gemini():
         user_question = data.get('question')
         if not user_question: return jsonify({'error': 'Domanda mancante'}), 400
 
-        filosofie_scelte = ". ".join(nanabot.philosophy.values())
+        # SOLUZIONE: Se la filosofia non è stata impostata (es. test diretto del lab),
+        # usiamo una filosofia di default per non mandare un prompt vuoto a Gemini.
+        if nanabot.philosophy:
+            filosofie_scelte = ". ".join(nanabot.philosophy.values())
+        else:
+            filosofie_scelte = "empatico, motivazionale e basato su dati scientifici"
+
         system_prompt = (
             "Sei Nanabot, un assistente virtuale per un nutrizionista. Il tuo tono è professionale ma empatico. "
             f"La tua filosofia guida è: '{filosofie_scelte}'. "
@@ -122,4 +177,5 @@ def ask_gemini():
     except Exception as e:
         print(f"[ERROR /api/ask]: {e}")
         return jsonify({'error': 'Errore durante la comunicazione con il servizio AI.'}), 500
+
 
