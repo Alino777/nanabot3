@@ -1,13 +1,13 @@
-/* --- NUOVA IDENTITÀ VISIVA - Basata sulla Dashboard --- */
+/* lab.css - Stile per la Centrale di Comando */
+
+/* --- Identità Visiva --- */
 :root {
     --primary-yellow: #FFD15B;
     --background-cream: #FFFDF6;
     --white: #ffffff;
-    --dark-text: #3D405B; /* Un grigio scuro, non nero assoluto */
+    --dark-text: #3D405B;
     --medium-text: #8D99AE;
     --border-color: #E2E8F0;
-    --soft-red: #FADADD;
-    --soft-blue: #DDEEFE;
     --font-sans: 'Poppins', sans-serif;
 }
 
@@ -24,7 +24,7 @@ body {
     line-height: 1.6;
 }
 
-/* --- Struttura Principale --- */
+/* --- Struttura Principale a 2 Colonne --- */
 .main-container {
     display: flex;
     gap: 2rem;
@@ -44,19 +44,19 @@ body {
     flex: 2;
     position: sticky;
     top: 2rem;
-    height: fit-content;
+    height: fit-content; /* L'anteprima rimane visibile mentre si scorre */
 }
 
-/* --- Componenti Stile "Ainana" --- */
+/* --- Componenti di Base --- */
 .card {
     background-color: var(--white);
-    border-radius: 20px; /* Bordo molto arrotondato */
+    border-radius: 20px;
     padding: 2rem;
-    box-shadow: 0px 8px 24px rgba(149, 157, 165, 0.1); /* Ombra più leggera */
+    box-shadow: 0px 8px 24px rgba(149, 157, 165, 0.1);
     border: none;
 }
 
-h1 { font-size: 2.25rem; font-weight: 700; color: var(--dark-text); }
+h1 { font-size: 2.25rem; font-weight: 700; }
 h2 { font-size: 1.25rem; font-weight: 600; margin-bottom: 0.5rem; }
 h4 { font-size: 1rem; color: var(--medium-text); font-weight: 400; }
 
@@ -82,16 +82,9 @@ h4 { font-size: 1rem; color: var(--medium-text); font-weight: 400; }
     color: var(--dark-text);
 }
 .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(255, 209, 91, 0.4); }
-.btn-primary:disabled { background-color: #E2E8F0; color: var(--medium-text); cursor: not-allowed; }
+.btn-primary.btn-large { padding: 1rem 2rem; font-size: 1rem; }
 
-.btn-secondary {
-    background-color: var(--white);
-    color: var(--dark-text);
-    border: 1px solid var(--border-color);
-}
-.btn-secondary:hover { border-color: var(--primary-yellow); }
-
-/* --- Componenti Specifici Stile "Ainana" --- */
+/* --- Componenti Specifici del Form --- */
 .toggle-switch {
     display: flex;
     align-items: center;
@@ -135,6 +128,13 @@ textarea:focus, .input-field:focus {
     background-color: var(--white);
 }
 
+.card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+}
+
 .quick-question-item {
     display: flex; justify-content: space-between; align-items: center;
     padding: 0.75rem 1rem;
@@ -147,11 +147,15 @@ textarea:focus, .input-field:focus {
 .quick-question-item .actions i { cursor: pointer; color: var(--medium-text); margin-left: 1rem; }
 .quick-question-item .actions i:hover { color: var(--primary-yellow); }
 
-/* --- Pannello Anteprima Stile "Ainana" --- */
-.chat-preview-wrapper .card-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
+.footer-actions {
+    text-align: right;
+    margin-top: 1rem;
+}
+
+/* --- Pannello Anteprima --- */
+.patient-selector {
+    margin-top: 1rem;
+    margin-bottom: 1.5rem;
 }
 .chat-window {
     background-color: #F9FAFB;
@@ -203,92 +207,4 @@ textarea:focus, .input-field:focus {
 @media (max-width: 1024px) {
     .main-container { flex-direction: column; }
     .preview-panel { position: static; }
-}
-
-#chat-container {
-    padding-bottom: 20px;
-}
-
-.chat-message-wrapper {
-    display: flex;
-    gap: 10px;
-    max-width: 85%;
-}
-
-.chat-avatar {
-    width: 36px;
-    height: 36px;
-    border-radius: 50%;
-    flex-shrink: 0;
-}
-
-.chat-bubble {
-    padding: 0.8rem 1.2rem;
-    border-radius: 18px;
-    box-shadow: 0 4px 10px var(--shadow-color);
-}
-
-/* Messaggi del Bot */
-.bot-wrapper {
-    align-self: flex-start;
-}
-.bot {
-    background-color: var(--white);
-    border-top-left-radius: 4px;
-}
-
-/* Messaggi dell'Utente */
-.user-wrapper {
-    align-self: flex-end;
-    flex-direction: row-reverse; /* Inverte l'ordine per allineare a destra */
-}
-.user {
-    background-color: var(--primary-color);
-    color: var(--text-primary);
-    border-top-right-radius: 4px;
-}
-
-/* Indicatore "sta scrivendo..." */
-.typing-indicator span {
-    height: 8px;
-    width: 8px;
-    background-color: #ccc;
-    border-radius: 50%;
-    display: inline-block;
-    animation: bounce 1.4s infinite ease-in-out both;
-}
-.typing-indicator span:nth-of-type(1) { animation-delay: -0.32s; }
-.typing-indicator span:nth-of-type(2) { animation-delay: -0.16s; }
-@keyframes bounce {
-  0%, 80%, 100% { transform: scale(0); }
-  40% { transform: scale(1.0); }
-}
-
-/* Card di proposta */
-.proposal-source {
-    font-size: 0.75rem;
-    font-weight: 700;
-    color: var(--text-secondary);
-    margin-bottom: 8px;
-    opacity: 0.8;
-}
-.proposal-actions {
-    margin-top: 15px;
-    padding-top: 15px;
-    border-top: 1px solid var(--border-color);
-    display: flex;
-    gap: 10px;
-}
-.btn-chat {
-    background: none;
-    border: 1px solid var(--border-color);
-    padding: 5px 12px;
-    border-radius: 8px;
-    cursor: pointer;
-    font-size: 0.8rem;
-    font-weight: 600;
-    transition: background-color 0.2s;
-}
-.btn-chat:hover {
-    background-color: var(--background-input);
 }

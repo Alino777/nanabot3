@@ -1,29 +1,98 @@
-    <!DOCTYPE html>
-    <html lang="it">
-    <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Laboratorio Nanabot</title>
-        <link rel="stylesheet" href="{{ url_for('static', filename='lab.css') }}">
-        <link rel="preconnect" href="https://fonts.googleapis.com">
-        <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;800&display=swap" rel="stylesheet">
-    </head>
-    <body>
-        <div id="supervision-lab">
-            <aside id="knowledge-base-panel">
-                <header class="panel-header"><h3>🧠 Base di Conoscenza</h3><button class="btn-icon" id="add-entry-btn" title="Aggiungi Nuova Voce">+</button></header>
-                <div class="panel-content"><ul id="kb-list"><li class="kb-item"><strong class="kb-question">Posso mangiare la pizza in dieta?</strong><p class="kb-answer">Assolutamente sì! La chiave sta nel bilanciare...</p></li><li class="kb-item"><strong class="kb-question">Perché non perdo peso?</strong><p class="kb-answer">Ci sono molti fattori da considerare. Prima di tutto...</p></li></ul></div>
-            </aside>
-            <main id="simulation-panel">
-                <header class="panel-header"><h3>🔬 Laboratorio di Simulazione</h3></header>
-                <div id="chat-container" class="panel-content"><div class="chat-empty-state"><img src="https://i.imgur.com/nvfq69Y.png" alt="Nutrizionista con robot" class="mission-image"><h4>Sono pronto per la verifica.</h4><p>Fai una domanda per vedere come risponderei.</p></div></div>
-                <div id="chat-input-area"><textarea id="user-prompt" placeholder="Chiedi qualcosa a Nanabot..."></textarea><button id="send-btn" class="btn-icon" title="Invia Messaggio" disabled><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg></button></div>
-            </main>
-            <aside id="review-panel" class="hidden">
-                <header class="panel-header"><h3>✏️ Analisi e Modifica</h3><button id="close-review-panel" class="btn-icon" title="Chiudi Pannello">&times;</button></header>
-                <div class="panel-content"><div class="review-section"><label>Domanda Originale:</label><p id="review-question">Perché ho sempre fame?</p></div><div class="review-section"><label>Risposta Proposta da Nanabot:</label><p id="review-proposed-answer">La fame costante può derivare da una dieta povera di fibre e proteine.</p></div><div class="review-section"><label for="review-final-answer">Risposta Finale (Modifica qui):</label><textarea id="review-final-answer">La fame costante può derivare da una dieta povera di fibre e proteine.</textarea></div><div class="review-actions"><button id="add-to-kb-btn" class="btn btn-secondary">Aggiungi a Conoscenza</button><button id="approve-final-btn" class="btn btn-primary">Salva e Approva</button></div></div>
-            </aside>
-        </div>
-        <script src="{{ url_for('static', filename='lab.js') }}" defer></script>
-    </body>
-    </html>
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Centrale di Comando | Assistente Virtuale</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- Per le icone come il "+" e il cestino -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+
+    <!-- Colleghiamo il file CSS che creeremo -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='lab.css') }}">
+</head>
+<body>
+
+    <main class="main-container">
+
+        <!-- ======================================= -->
+        <!-- PANNELLO SINISTRO: Pannello di Controllo -->
+        <!-- ======================================= -->
+        <section class="control-panel">
+            
+            <header class="page-header">
+                <h1>Assistente Virtuale</h1>
+                <h4>Imposta, personalizza e testa il chatbot per i tuoi pazienti.</h4>
+            </header>
+
+            <div class="card">
+                <h2>Attivazione e Messaggio</h2>
+                <div class="toggle-switch" style="margin-bottom: 1.5rem;">
+                    <span>Attiva Assistente per i pazienti</span>
+                    <label class="switch">
+                        <input type="checkbox" checked>
+                        <span class="slider"></span>
+                    </label>
+                </div>
+                <p class="input-description">
+                    Messaggio di benvenuto (usa <code>{nome_paziente}</code>)
+                </p>
+                <textarea id="welcome-message" rows="3">Ciao {nome_paziente}! Sono il tuo assistente virtuale. Sono qui per aiutarti con il tuo piano alimentare.</textarea>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <h2>Domande Rapide</h2>
+                    <button id="add-quick-question-btn" class="btn btn-primary"><i class="fa-solid fa-plus"></i>Aggiungi</button>
+                </div>
+                
+                <div id="quick-question-list">
+                    <!-- Le domande rapide verranno aggiunte qui da JavaScript -->
+                </div>
+            </div>
+
+            <div class="footer-actions">
+                <button id="save-all-btn" class="btn btn-primary btn-large">Salva Tutte le Impostazioni</button>
+            </div>
+
+        </section>
+
+        <!-- ======================================= -->
+        <!-- PANNELLO DESTRO: Anteprima Live       -->
+        <!-- ======================================= -->
+        <aside class="preview-panel">
+            <div class="card">
+                <div class="card-header">
+                    <h2>Anteprima Live</h2>
+                </div>
+                 <div class="patient-selector">
+                    <label for="patient-select" class="input-description">Simula come:</label>
+                    <select id="patient-select" class="input-field">
+                        <option value="Mario Rossi">Mario Rossi</option>
+                        <option value="Laura Bianchi">Laura Bianchi</option>
+                    </select>
+                </div>
+                <div class="chat-window">
+                    <div class="chat-body">
+                        <div id="preview-welcome-message" class="chat-bubble bot">
+                            <!-- Il messaggio di benvenuto apparirà qui -->
+                        </div>
+                    </div>
+                    <div id="preview-quick-replies" class="chat-quick-replies">
+                        <!-- I pulsanti delle domande rapide appariranno qui -->
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+    </main>
+
+    <!-- Colleghiamo il file JavaScript che renderà tutto interattivo -->
+    <script src="{{ url_for('static', filename='lab.js') }}" defer></script>
+
+</body>
+</html>
