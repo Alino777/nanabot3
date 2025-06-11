@@ -91,30 +91,39 @@
         <!-- ======================================= -->
         <!-- PANNELLO DESTRO: Anteprima Live       -->
         <!-- ======================================= -->
-        <aside class="preview-panel">
-            <div class="card">
-                <div class="card-header no-border">
-                    <h2>Anteprima Live</h2>
-                </div>
-                 <div class="patient-selector">
-                    <label for="patient-select" class="input-description">Simula come:</label>
-                    <select id="patient-select" class="input-field">
-                        <option value="Mario Rossi">Mario Rossi</option>
-                        <option value="Laura Bianchi">Laura Bianchi</option>
-                    </select>
-                </div>
-                <div class="chat-window">
-                    <div class="chat-body">
-                        <div id="preview-welcome-message" class="chat-bubble bot">
-                            <!-- Il messaggio di benvenuto apparirà qui -->
-                        </div>
+    <aside class="preview-panel">
+        <div class="card">
+            <div class="card-header no-border">
+                <h2>Anteprima Live</h2>
+            </div>
+             <div class="patient-selector">
+                <label for="patient-select" class="input-description">Simula come:</label>
+                <select id="patient-select" class="input-field">
+                    <option value="Mario Rossi">Mario Rossi</option>
+                    <option value="Laura Bianchi">Laura Bianchi</option>
+                </select>
+            </div>
+            <div class="chat-window">
+                <!-- Il corpo della chat, dove appariranno i messaggi -->
+                <div id="chat-body" class="chat-body">
+                    <div id="preview-welcome-message" class="chat-bubble bot">
+                        <!-- Il messaggio di benvenuto apparirà qui -->
                     </div>
-                    <div id="preview-quick-replies" class="chat-quick-replies">
-                        <!-- I pulsanti delle domande rapide appariranno qui -->
-                    </div>
+                </div>
+                <!-- I pulsanti delle domande rapide iniziali -->
+                <div id="preview-quick-replies" class="chat-quick-replies">
+                    <!-- I pulsanti delle domande rapide appariranno qui -->
+                </div>
+                <!-- NUOVO: Area di input per scrivere al bot -->
+                <div class="chat-input-container">
+                    <textarea id="chat-input" placeholder="Scrivi un messaggio..." rows="1"></textarea>
+                    <button id="chat-send-btn" class="btn-icon" title="Invia Messaggio" disabled>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
+                    </button>
                 </div>
             </div>
-        </aside>
+        </div>
+    </aside>
 
     </main>
 

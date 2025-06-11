@@ -409,3 +409,68 @@ hr.card-divider {
     border-color: var(--primary-yellow);
     background-color: var(--background-cream);
 }
+
+/* Stili Aggiuntivi per la Chat Interattiva */
+
+/* Rende il corpo della chat scrollabile */
+.chat-body {
+    overflow-y: auto;
+}
+
+.chat-input-container {
+    display: flex;
+    padding: 1rem 1.5rem;
+    border-top: 1px solid var(--border-color);
+    gap: 0.75rem;
+    align-items: flex-start;
+}
+
+#chat-input {
+    flex-grow: 1;
+    border: none;
+    background: transparent;
+    padding: 0.5rem 0;
+    font-family: var(--font-sans);
+    font-size: 1rem;
+    resize: none;
+    outline: none;
+    height: 24px; /* Altezza iniziale per una riga */
+    transition: height 0.2s;
+}
+
+#chat-send-btn {
+    flex-shrink: 0;
+    background-color: var(--primary-yellow);
+    color: var(--dark-text);
+}
+#chat-send-btn:disabled {
+    background-color: var(--border-color);
+    color: var(--medium-text);
+    cursor: not-allowed;
+}
+
+/* Stili per le bolle della conversazione */
+.user {
+    background-color: var(--primary-yellow);
+    align-self: flex-end; /* Allinea a destra */
+    border-top-right-radius: 4px;
+}
+
+.bot {
+    background-color: var(--white);
+    align-self: flex-start; /* Allinea a sinistra */
+    border-top-left-radius: 4px;
+}
+
+/* Indicatore "sta scrivendo..." */
+.typing-indicator span {
+    height: 8px; width: 8px; background-color: #ccc;
+    border-radius: 50%; display: inline-block;
+    animation: bounce 1.4s infinite ease-in-out both;
+}
+.typing-indicator span:nth-of-type(1) { animation-delay: -0.32s; }
+.typing-indicator span:nth-of-type(2) { animation-delay: -0.16s; }
+@keyframes bounce {
+  0%, 80%, 100% { transform: scale(0); }
+  40% { transform: scale(1.0); }
+}
