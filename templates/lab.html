@@ -15,7 +15,9 @@
 
     <main class="main-container">
 
-        <!-- Pannello di Controllo Sinistro -->
+        <!-- ======================================= -->
+        <!-- PANNELLO SINISTRO: Pannello di Controllo -->
+        <!-- ======================================= -->
         <section class="control-panel">
             
             <header class="page-header">
@@ -23,7 +25,7 @@
                 <h4>Imposta, personalizza e testa il chatbot per i tuoi pazienti.</h4>
             </header>
 
-            <!-- Card Attivazione e Regole -->
+            <!-- Card per Attivazione Condizionale -->
             <div class="card">
                 <div class="main-toggle-wrapper">
                     <h2>Assistente Virtuale</h2>
@@ -34,88 +36,123 @@
                         </label>
                     </div>
                 </div>
-                <p class="input-description">Attiva o disattiva l'assistente per tutti i pazienti.</p>
+                <p class="input-description">
+                    Attiva o disattiva l'assistente per tutti i pazienti.
+                </p>
+            
                 <hr class="card-divider">
+            
                 <div id="exceptions-section">
                     <h3>Eccezioni</h3>
-                    <p class="input-description">Escludi l'assistente per i pazienti che seguono diete specifiche.</p>
+                    <p class="input-description">
+                        Escludi l'assistente per i pazienti che seguono diete specifiche.
+                    </p>
                     <div class="tag-selector-wrapper">
                         <div id="tag-selector-container" class="tag-selector-container">
                             <input type="text" id="exception-input" placeholder="Aggiungi una dieta...">
                         </div>
                         <div id="suggestions-panel" class="suggestions-panel hidden"></div>
                     </div>
-                </div>
+                </div>                
             </div>
 
-            <!-- Card Impostazioni Contenuti -->
+            <!-- Card per Messaggio di Benvenuto -->
             <div class="card">
-                <h2>Impostazioni Contenuti</h2>
-                <div class="settings-actions-group">
-                    <div class="action-row">
-                        <button id="edit-welcome-btn" class="btn btn-secondary"><i class="fa-solid fa-pen-to-square"></i>Modifica Messaggio di Benvenuto</button>
-                    </div>
-                    <div class="action-row">
-                        <button id="add-quick-question-btn" class="btn btn-secondary"><i class="fa-solid fa-plus"></i>Aggiungi Domanda Rapida</button>
-                    </div>
-                    <div class="action-row">
-                        <button id="manage-all-btn" class="btn btn-secondary"><i class="fa-solid fa-list-check"></i>Gestisci Domande Rapide</button>
+                <h2>Messaggio di Benvenuto</h2>
+                <p class="input-description">
+                    Personalizza il primo messaggio che i pazienti vedranno (usa <code>{nome_paziente}</code>).
+                </p>
+                <textarea id="welcome-message" rows="3">Ciao {nome_paziente}! Sono Nanabot, l'assistente virtuale del tuo nutrizionista. Sono qui per aiutarti con il tuo piano alimentare.</textarea>
+            </div>
+
+
+            <!-- Card per Domande Rapide -->
+            <div class="card">
+                <div class="card-header">
+                    <h2>Domande Rapide</h2>
+                    <div class="header-actions">
+                        <button id="manage-all-btn" class="btn btn-secondary">Gestisci Tutte</button>
+                        <button id="add-quick-question-btn" class="btn btn-primary"><i class="fa-solid fa-plus"></i>Aggiungi</button>
                     </div>
                 </div>
-                <hr class="card-divider">
-                <div class="action-row danger-zone">
-                     <button id="reset-training-btn" class="btn btn-danger-outline"><i class="fa-solid fa-arrow-rotate-left"></i>Torna all'Addestramento</button>
+                
+                <div id="quick-question-list">
+                    <!-- Le domande rapide verranno popolate da JavaScript -->
                 </div>
             </div>
 
-            <!-- Pulsante Salva -->
+            <!-- Pulsante Salva in fondo -->
             <div class="footer-actions">
                 <button id="save-all-btn" class="btn btn-primary btn-large">Salva Tutte le Impostazioni</button>
             </div>
+
         </section>
 
-        <!-- Pannello Anteprima Destro -->
-        <aside class="preview-panel">
-            <div class="card">
-                <div class="card-header no-border">
-                    <h2>Anteprima Live</h2>
-                </div>
-                 <div class="patient-selector">
-                    <label for="patient-select" class="input-description">Simula come:</label>
-                    <select id="patient-select" class="input-field">
-                        <option value="Mario Rossi">Mario Rossi</option>
-                        <option value="Laura Bianchi">Laura Bianchi</option>
-                    </select>
-                </div>
-                <div class="chat-window">
-                    <div id="chat-body" class="chat-body"></div>
-                    <div id="preview-quick-replies" class="chat-quick-replies"></div>
-                    <div class="chat-input-container">
-                        <textarea id="chat-input" placeholder="Scrivi un messaggio..." rows="1"></textarea>
-                        <button id="chat-send-btn" class="btn-icon" title="Invia Messaggio" disabled>
-                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
-                        </button>
+        <!-- ======================================= -->
+        <!-- PANNELLO DESTRO: Anteprima Live       -->
+        <!-- ======================================= -->
+    <aside class="preview-panel">
+        <div class="card">
+            <div class="card-header no-border">
+                <h2>Anteprima Live</h2>
+            </div>
+             <div class="patient-selector">
+                <label for="patient-select" class="input-description">Simula come:</label>
+                <select id="patient-select" class="input-field">
+                    <option value="Mario Rossi">Mario Rossi</option>
+                    <option value="Laura Bianchi">Laura Bianchi</option>
+                </select>
+            </div>
+            <div class="chat-window">
+                <!-- Il corpo della chat, dove appariranno i messaggi -->
+                <div id="chat-body" class="chat-body">
+                    <div id="preview-welcome-message" class="chat-bubble bot">
+                        <!-- Il messaggio di benvenuto apparirà qui -->
                     </div>
                 </div>
+                <!-- I pulsanti delle domande rapide iniziali -->
+                <div id="preview-quick-replies" class="chat-quick-replies">
+                    <!-- I pulsanti delle domande rapide appariranno qui -->
+                </div>
+                <!-- NUOVO: Area di input per scrivere al bot -->
+                <div class="chat-input-container">
+                    <textarea id="chat-input" placeholder="Scrivi un messaggio..." rows="1"></textarea>
+                    <button id="chat-send-btn" class="btn-icon" title="Invia Messaggio" disabled>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
+                    </button>
+                </div>
             </div>
-        </aside>
+        </div>
+    </aside>
+
     </main>
 
-    <!-- Finestra Modale (Unica e Dinamica) -->
-    <div id="modal" class="modal-overlay hidden">
+    <!-- Finestra Modale per Aggiungere Domande -->
+    <div id="add-question-modal" class="modal-overlay hidden">
         <div class="modal-content">
             <header class="modal-header">
-                <h2 id="modal-title"></h2>
+                <h2 id="modal-title">Aggiungi Domanda Rapida</h2>
                 <button id="close-modal-btn" class="btn-icon">&times;</button>
             </header>
-            <div id="modal-body" class="modal-body"></div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label for="modal-question">Domanda del paziente</label>
+                    <textarea id="modal-question" rows="3" placeholder="Es. Posso bere caffè prima di allenarmi?"></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="modal-answer">La tua risposta pre-impostata</label>
+                    <textarea id="modal-answer" rows="6" placeholder="Scrivi la risposta che il bot dovrà dare..."></textarea>
+                    <p class="input-description">Questa risposta verrà usata esattamente come la scrivi.</p>
+                </div>
+            </div>
             <footer class="modal-footer">
                 <button id="cancel-modal-btn" class="btn btn-secondary">Annulla</button>
-                <button id="save-modal-btn" class="btn btn-primary">Salva</button>
+                <button id="save-modal-btn" class="btn btn-primary" disabled>Salva Domanda</button>
             </footer>
         </div>
     </div>
 
     <script src="{{ url_for('static', filename='lab.js') }}" defer></script>
+
 </body>
 </html>
