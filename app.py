@@ -2,6 +2,7 @@ import requests
 import os  # Per leggere le variabili d'ambiente
 from flask import Flask, jsonify, request, render_template
 from flask_cors import CORS
+from time import time
 
 # --- Classe di Logica (DigitalAssistant) ---
 PHILOSOPHY_OPTIONS = {
@@ -71,7 +72,7 @@ class DigitalAssistant:
             self.config["resources"] = data
             return "Fantastico! Hai dato a Nanabot le chiavi della tua 'dispensa di sapienza'."
         return None
-    
+
     def set_philosophy(self, theme, choice_key):
         if len(self.philosophy) < len(THEMES):
             self.philosophy[theme] = PHILOSOPHY_OPTIONS[theme][choice_key]
@@ -80,11 +81,11 @@ class DigitalAssistant:
             self.add_badge("🏆 Master Trainer")
             return "Congratulazioni, Master Trainer! La personalità di Nanabot è forgiata a tua immagine e somiglianza."
         return None
-        
+
     def add_badge(self, badge: str):
         if badge not in self.unlocked_badges:
             self.unlocked_badges.append(badge)
-        
+
     def get_status(self):
         return {
             'name': self.name,
@@ -95,10 +96,20 @@ class DigitalAssistant:
             'themes_todo': [t for t in THEMES if t not in self.philosophy]
         }
 
-# --- Inizializzazione Flask ---
+# --- Inizializzazione Flask e rate limiting ---
 app = Flask(__name__)
 CORS(app, resources={r"/api/*": {"origins": "*"}})
 nanabot = DigitalAssistant()
+rate_limit = {}
+
+@app.before_request
+def check_rate_limit():
+    ip = request.remote_addr
+    now = time()
+    last = rate_limit.get(ip, 0)
+    if now - last < 1:  # almeno 1 secondo tra le richieste
+        return jsonify({'error': 'Troppo veloce, riprova tra un secondo.'}), 429
+    rate_limit[ip] = now
 
 # --- Rotte Esistenti ---
 @app.route('/')
@@ -118,49 +129,66 @@ def philosophy_options():
     return jsonify(PHILOSOPHY_OPTIONS)
 
 @app.route('/api/complete_mission/<int:mission_number>', methods=['POST'])
-def handle_mission_completion(mission_number):
-    message = nanabot.complete_mission(mission_number, request.get_json())
-    if message:
-        return jsonify({'success': True, 'message': message})
-    return jsonify({'success': False, 'message': 'Missione già completata o dati non validi'}), 400
+<|diff_marker|>      def handle_mission_completion(mission_number):
+        message = nanabot.complete_mission(mission_number, request.get_json())
+        if message:
+            return jsonify({'success': True, 'message': message})
+        return jsonify({'success': False, 'message': 'Missione già completata o dati non validi'}), 400
 
 @app.route('/api/select_philosophy', methods=['POST'])
-def handle_philosophy_selection():
-    data = request.get_json()
-    message = nanabot.set_philosophy(data.get('theme'), data.get('choice'))
-    return jsonify({'success': True, 'message': message, 'final_mission_complete': bool(message)})
+<|diff_marker|>      def handle_philosophy_selection():
+        data = request.get_json()
+        message = nanabot.set_philosophy(data.get('theme'), data.get('choice'))
+        return jsonify({'success': True, 'message': message, 'final_mission_complete': bool(message)})
 
 @app.route('/api/reset', methods=['POST'])
-def reset():
-    global nanabot
-    nanabot = DigitalAssistant()
-    return jsonify({'success': True, 'message': 'Addestramento resettato!'})
+<|diff_marker|>      def reset():
+        global nanabot
+        nanabot = DigitalAssistant()
+        return jsonify({'success': True, 'message': 'Addestramento resettato!'})
 
 # --- Nuova Rotta Chat con Gemini ---
 @app.route('/api/ask', methods=['POST'])
 def ask_gemini():
     try:
         data = request.get_json()
-        user_question = data.get('question')
+        user_question = data.get('question', '').strip()
         if not user_question:
             return jsonify({'error': 'Domanda mancante'}), 400
 
-        # LIVELLO 2: Estrazione filosofia scelta
+        # Verifica comprensione: se ambigua, chiedi chiarimenti
+        if len(user_question.split()) < 3:
+            return jsonify({'answer': 'Potresti specificare meglio la tua domanda?'}), 200
+
+        # Fallback sicuro per keyword critiche della missione 2
+        for kw in nanabot.config['security']['keywords']:
+            if kw.lower() in user_question.lower():
+                return jsonify({'answer': (
+                    "Non ho informazioni sufficienti su questo tema delicato. "
+                    "Per favore contatta direttamente il tuo nutrizionista."
+                )}), 200
+
+        # Livello 2: estrazione filosofia in ordine
         if nanabot.philosophy:
-            filosofie_scelte = ". ".join(nanabot.philosophy.values())
+            filosofie_scelte = ". ".join(
+                nanabot.philosophy[theme] for theme in THEMES if theme in nanabot.philosophy
+            )
         else:
             filosofie_scelte = "empatico, motivazionale e basato su dati scientifici"
 
-        # Costruzione system prompt
+        # Costruzione del system prompt
         system_prompt = (
-            "Sei Nanabot, un assistente virtuale per un nutrizionista."
-            " Il tuo tono è professionale ma empatico. Conciso il più possibile. Manda messaggi di max 6 righe a meno che non strettamente necessario per il tema.\n\n"
-            f"La tua filosofia guida è:\n{filosofie_scelte}\n\n"
-            "Rispondi alla domanda del paziente in modo chiaro e incoraggiante. "
-            "Non dare mai consigli medici specifici."
+            "Sei Nanabot, assistente virtuale di un nutrizionista. Usa il 'tu'.\n"
+            "Stile: professionale ed empatico. Plain language, con termini tecnici spiegati.\n"
+            "Struttura: blocchi con titoli ed elenchi. Emoji soft per incoraggiare (es. 💪).\n"
+            "Risposte ≤250 caratteri salvo casi complessi.\n"
+            "Se serve, offri follow-up o promemoria (es. 'Vuoi un promemoria per registrare il pasto domani?').\n"
+            "Se utile, fornisci link a risorse (es. '/resources/ricetta').\n\n"
+            f"Filosofia interna:\n{filosofie_scelte}\n\n"
+            "Non esplicitare le filosofie. Non dare consigli medici specifici; invita a consultare il nutrizionista."
         )
 
-        # Lettura API key da env
+        # Chiamata a Gemini
         api_key = os.environ.get('GOOGLE_API_KEY', '')
         if not api_key:
             raise ValueError("La chiave API di Google non è stata impostata nelle variabili d'ambiente.")
@@ -171,20 +199,18 @@ def ask_gemini():
             f"?key={api_key}"
         )
         payload = {
-            "contents": [{"parts": [{"text": f"{system_prompt}\n\nDomanda: \"{user_question}\""}]}]
+            "contents": [{"parts": [{"text": f"{system_prompt}\n\nDomanda: '{user_question}'"}]}]
         }
 
         response = requests.post(url, json=payload, headers={'Content-Type': 'application/json'})
-        print(f"Chiamata a Gemini - Status: {response.status_code}, Risposta: {response.text}")
         response.raise_for_status()
 
         result = response.json()
         bot_response = result['candidates'][0]['content']['parts'][0]['text']
         return jsonify({'answer': bot_response})
-
     except Exception as e:
         print(f"[ERROR /api/ask]: {e}")
-        return jsonify({'error': 'Errore durante la comunicazione con il servizio AI.'}), 500
+        return jsonify({'error': 'Errore comunicazione AI.'}), 500
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))
