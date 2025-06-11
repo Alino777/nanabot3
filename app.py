@@ -137,3 +137,9 @@ def reset():
     global nanabot
     nanabot = DigitalAssistant()
     return jsonify({'success': True, 'message': 'Addestramento resettato!'})
+
+# --- NUOVO: Rotta per il Laboratorio di Supervisione ---
+@app.route('/lab')
+def supervision_lab():
+    """Questa rotta serve la nuova interfaccia a 3 pannelli."""
+    return render_template('lab.html')

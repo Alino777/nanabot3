@@ -1,0 +1,1 @@
+console.log("Il file lab.js è stato caricato correttamente!");

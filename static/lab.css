@@ -1,0 +1,39 @@
+/* style.css (Versione 8.0 - Laboratorio di Supervisione) */
+    :root { --primary-color: #6E9D00; --secondary-color: #B70000; --accent-color: #FFD100; --background-main: #f4f7f6; --background-panel: #ffffff; --background-input: #eef2f1; --border-color: #dde5e2; --shadow-color: rgba(0, 0, 0, 0.07); --text-primary: #1c2521; --text-secondary: #5a6e67; --text-on-primary: #ffffff; }
+    *, *::before, *::after { box-sizing: border-box; }
+    body { font-family: 'Nunito', sans-serif; background-color: var(--background-main); color: var(--text-primary); margin: 0; height: 100vh; overflow: hidden; }
+    #supervision-lab { display: flex; height: 100%; }
+    #knowledge-base-panel { width: 25%; min-width: 300px; border-right: 1px solid var(--border-color); display: flex; flex-direction: column; }
+    #simulation-panel { flex-grow: 1; display: flex; flex-direction: column; }
+    #review-panel { width: 30%; min-width: 350px; border-left: 1px solid var(--border-color); background-color: var(--background-panel); display: flex; flex-direction: column; }
+    #review-panel.hidden { display: none; }
+    .panel-header { display: flex; justify-content: space-between; align-items: center; padding: 15px 20px; border-bottom: 1px solid var(--border-color); background-color: var(--background-panel); flex-shrink: 0; }
+    .panel-header h3 { font-size: 1.1rem; margin: 0; }
+    .panel-content { padding: 20px; overflow-y: auto; flex-grow: 1; }
+    #kb-list { list-style: none; padding: 0; margin: 0; }
+    .kb-item { padding: 15px; border-radius: 8px; cursor: pointer; transition: background-color 0.2s ease; }
+    .kb-item:hover { background-color: var(--background-input); }
+    .kb-question { display: block; font-weight: 700; margin-bottom: 5px; }
+    .kb-answer { font-size: 0.9rem; color: var(--text-secondary); margin: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    #chat-container { display: flex; flex-direction: column; gap: 20px; }
+    .chat-empty-state { text-align: center; margin: auto; color: var(--text-secondary); }
+    .chat-empty-state img { max-width: 120px; }
+    .chat-empty-state h4 { font-size: 1.2rem; color: var(--text-primary); }
+    #chat-input-area { padding: 15px; border-top: 1px solid var(--border-color); display: flex; gap: 10px; align-items: flex-start; background-color: var(--background-panel); }
+    #user-prompt { flex-grow: 1; border: 1px solid var(--border-color); border-radius: 8px; padding: 12px 15px; font-family: 'Nunito', sans-serif; font-size: 1rem; resize: none; background-color: var(--background-input); min-height: 50px; }
+    #user-prompt:focus { outline: none; border-color: var(--primary-color); box-shadow: 0 0 0 2px rgba(110, 157, 0, 0.2); }
+    .review-section { margin-bottom: 25px; }
+    .review-section label { display: block; font-weight: 700; margin-bottom: 8px; color: var(--text-secondary); font-size: 0.9rem; }
+    .review-section p { margin: 0; padding: 12px; background-color: var(--background-input); border-radius: 8px; }
+    #review-final-answer { width: 100%; min-height: 150px; border: 1px solid var(--border-color); border-radius: 8px; padding: 12px; font-size: 1rem; resize: vertical; }
+    .review-actions { display: flex; gap: 10px; margin-top: auto; padding-top: 20px; }
+    .btn-icon { background: none; border: none; border-radius: 50%; width: 36px; height: 36px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: background-color 0.2s ease; font-size: 1.5rem; color: var(--text-secondary); }
+    .btn-icon:hover { background-color: var(--background-input); }
+    #send-btn svg { width: 20px; height: 20px; }
+    #send-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+    .btn { padding: 10px 20px; font-weight: 700; border-radius: 8px; border: none; cursor: pointer; transition: background-color 0.2s ease; flex-grow: 1; }
+    .btn-primary { background-color: var(--primary-color); color: var(--text-on-primary); }
+    .btn-primary:hover { background-color: #587f00; }
+    .btn-secondary { background-color: var(--background-input); color: var(--text-primary); }
+    .btn-secondary:hover { background-color: #dce5e1; }
+    
