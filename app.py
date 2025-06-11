@@ -1,7 +1,8 @@
 # app.py (Basato sul tuo codice, con l'aggiunta della logica Gemini)
 
 # --- 1. IMPORT NECESSARI ---
-import requests  # <-- AGGIUNTA
+import requests
+import os # <-- AGGIUNTA per leggere le variabili d'ambiente
 from flask import Flask, jsonify, request, render_template
 from flask_cors import CORS
 
@@ -147,8 +148,6 @@ def ask_gemini():
         if not user_question:
             return jsonify({'error': 'Domanda mancante'}), 400
 
-        # Se la filosofia non è stata ancora definita (es. test diretto del lab),
-        # usiamo dei valori di default per non mandare un prompt vuoto.
         if nanabot.philosophy:
             filosofie_scelte = ". ".join(nanabot.philosophy.values())
         else:
@@ -160,13 +159,16 @@ def ask_gemini():
             "Rispondi alla domanda del paziente in modo chiaro e incoraggiante. Non dare mai consigli medici specifici."
         )
 
-        api_key = "" # Vercel gestisce la chiave automaticamente
+        # MODIFICA: Leggiamo la chiave API dalle variabili d'ambiente di Vercel
+        api_key = os.environ.get('GOOGLE_API_KEY', '')
+        if not api_key:
+            raise ValueError("La chiave API di Google non è stata impostata nelle variabili d'ambiente.")
+
         url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key={api_key}"
         payload = {"contents": [{"parts": [{"text": f"{system_prompt}\n\nDomanda: \"{user_question}\""}]}]}
         
         response = requests.post(url, json=payload, headers={'Content-Type': 'application/json'})
         
-        # Aggiungiamo un log per il debug
         print(f"Chiamata a Gemini - Status: {response.status_code}, Risposta: {response.text}")
         response.raise_for_status()
         
