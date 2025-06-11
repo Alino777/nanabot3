@@ -1,12 +1,9 @@
-# app.py (Basato sul tuo codice, con l'aggiunta della logica Gemini)
-
-# --- 1. IMPORT NECESSARI ---
 import requests
-import os # <-- AGGIUNTA per leggere le variabili d'ambiente
+import os  # Per leggere le variabili d'ambiente
 from flask import Flask, jsonify, request, render_template
 from flask_cors import CORS
 
-# --- 2. DATI E CLASSE DI LOGICA (IL TUO CODICE, INVARIATO) ---
+# --- Classe di Logica (DigitalAssistant) ---
 PHILOSOPHY_OPTIONS = {
     "Gestione dello Sgarro": {
         "A": "[METODICO SCIENTIFICO] Lo 'sgarro' è un dato. Analizziamolo per compensare il bilancio calorico settimanale senza impatti.",
@@ -98,12 +95,12 @@ class DigitalAssistant:
             'themes_todo': [t for t in THEMES if t not in self.philosophy]
         }
 
-# --- 3. INIZIALIZZAZIONE DELL'APP FLASK (INVARIATA) ---
+# --- Inizializzazione Flask ---
 app = Flask(__name__)
 CORS(app, resources={r"/api/*": {"origins": "*"}})
 nanabot = DigitalAssistant()
 
-# --- 4. DEFINIZIONE DELLE ROTTE ESISTENTI (INVARIATE) ---
+# --- Rotte Esistenti ---
 @app.route('/')
 def home():
     return render_template('index.html')
@@ -139,7 +136,7 @@ def reset():
     nanabot = DigitalAssistant()
     return jsonify({'success': True, 'message': 'Addestramento resettato!'})
 
-# --- 5. NUOVA ROTTA PER LA CHAT CON GEMINI ---
+# --- Nuova Rotta Chat con Gemini ---
 @app.route('/api/ask', methods=['POST'])
 def ask_gemini():
     try:
@@ -148,30 +145,39 @@ def ask_gemini():
         if not user_question:
             return jsonify({'error': 'Domanda mancante'}), 400
 
+        # LIVELLO 2: Estrazione filosofia scelta
         if nanabot.philosophy:
             filosofie_scelte = ". ".join(nanabot.philosophy.values())
         else:
             filosofie_scelte = "empatico, motivazionale e basato su dati scientifici"
 
+        # Costruzione system prompt
         system_prompt = (
-            "Sei Nanabot, un assistente virtuale per un nutrizionista. Il tuo tono è professionale ma empatico. "
-            f"La tua filosofia guida è: '{filosofie_scelte}'. "
-            "Rispondi alla domanda del paziente in modo chiaro e incoraggiante. Non dare mai consigli medici specifici."
+            "Sei Nanabot, un assistente virtuale per un nutrizionista."
+            " Il tuo tono è professionale ma empatico.\n\n"
+            f"La tua filosofia guida è:\n{filosofie_scelte}\n\n"
+            "Rispondi alla domanda del paziente in modo chiaro e incoraggiante. "
+            "Non dare mai consigli medici specifici."
         )
 
-        # MODIFICA: Leggiamo la chiave API dalle variabili d'ambiente di Vercel
+        # Lettura API key da env
         api_key = os.environ.get('GOOGLE_API_KEY', '')
         if not api_key:
             raise ValueError("La chiave API di Google non è stata impostata nelle variabili d'ambiente.")
 
-        url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key={api_key}"
-        payload = {"contents": [{"parts": [{"text": f"{system_prompt}\n\nDomanda: \"{user_question}\""}]}]}
-        
+        url = (
+            "https://generativelanguage.googleapis.com/v1beta/models/"
+            "gemini-2.0-flash:generateContent"
+            f"?key={api_key}"
+        )
+        payload = {
+            "contents": [{"parts": [{"text": f"{system_prompt}\n\nDomanda: \"{user_question}\""}]}]
+        }
+
         response = requests.post(url, json=payload, headers={'Content-Type': 'application/json'})
-        
         print(f"Chiamata a Gemini - Status: {response.status_code}, Risposta: {response.text}")
         response.raise_for_status()
-        
+
         result = response.json()
         bot_response = result['candidates'][0]['content']['parts'][0]['text']
         return jsonify({'answer': bot_response})
@@ -179,3 +185,7 @@ def ask_gemini():
     except Exception as e:
         print(f"[ERROR /api/ask]: {e}")
         return jsonify({'error': 'Errore durante la comunicazione con il servizio AI.'}), 500
+
+if __name__ == '__main__':
+    port = int(os.environ.get('PORT', 5000))
+    app.run(host='0.0.0.0', port=port)
