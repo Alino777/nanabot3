@@ -3,8 +3,6 @@ from flask import Flask, jsonify, request, render_template
 from flask_cors import CORS
 
 # --- 2. DATI E CLASSE DI LOGICA ---
-# Qui definiamo le opzioni filosofiche e la classe che gestisce lo stato del Nanabot.
-
 PHILOSOPHY_OPTIONS = {
     "Gestione dello Sgarro": {
         "A": "[METODICO SCIENTIFICO] Lo 'sgarro' è un dato. Analizziamolo per compensare il bilancio calorico settimanale senza impatti.",

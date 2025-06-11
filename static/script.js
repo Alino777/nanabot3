@@ -1,4 +1,4 @@
-// script.js (Versione Finale - Pronta per il Deploy)
+// script.js (Versione Funzionale - Pronta per il Deploy)
 
 document.addEventListener('DOMContentLoaded', () => {
     const app = document.getElementById('app');
@@ -209,7 +209,7 @@ document.addEventListener('DOMContentLoaded', () => {
         container.innerHTML = `<div class="mission-card completion-card"><h2>🎉 Addestramento Completato!</h2><p>Nanabot è pronto.</p><div class="final-actions"><button id="reset-btn" class="btn btn-secondary">Ricomincia Addestramento</button><button id="discover-btn" class="btn btn-primary">Scopri il tuo Nanabot!</button></div></div>`;
         document.getElementById('reset-btn').addEventListener('click', resetApp);
         document.getElementById('discover-btn').addEventListener('click', () => {
-            alert("Perfetto! Da qui verrai reindirizzato alla dashboard per interagire con il tuo Nanabot appena addestrato.");
+            alert("Azione non ancora implementata.");
         });
     }
     
@@ -249,7 +249,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (typeof callback === 'function') callback(status);
 
         } catch (error) { 
-            app.innerHTML = `<div class="mission-card" style="text-align: center; border-color: #c00;"><h2 style="color: #c00;">⚠️ Errore di Connessione</h2><p>Impossibile comunicare con il server. Assicurati che il backend Python (app.py) sia in esecuzione e riprova.</p><button class="btn btn-yellow" onclick="location.reload()">Ricarica la pagina</button></div>`; 
+            app.innerHTML = `<div class="mission-card" style="text-align: center; border-color: var(--danger-red);"><h2 style="color: var(--danger-red);">⚠️ Errore di Connessione</h2><p>Impossibile comunicare con il server. Assicurati che il backend Python (app.py) sia in esecuzione e riprova.</p><button class="btn btn-yellow" onclick="location.reload()">Ricarica la pagina</button></div>`; 
             console.error("Errore di connessione:", error);
         }
     }
