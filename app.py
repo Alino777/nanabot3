@@ -3,6 +3,7 @@ import os  # Per leggere le variabili d'ambiente
 from flask import Flask, jsonify, request, render_template
 from flask_cors import CORS
 from time import time
+import logging
 
 # --- Classe di Logica (DigitalAssistant) ---
 PHILOSOPHY_OPTIONS = {
@@ -99,6 +100,8 @@ class DigitalAssistant:
 # --- Inizializzazione Flask e rate limiting ---
 app = Flask(__name__)
 CORS(app, resources={r"/api/*": {"origins": "*"}})
+# Logger dettagliato per debugging
+app.logger.setLevel(logging.DEBUG)
 nanabot = DigitalAssistant()
 rate_limit = {}
 
@@ -129,23 +132,23 @@ def philosophy_options():
     return jsonify(PHILOSOPHY_OPTIONS)
 
 @app.route('/api/complete_mission/<int:mission_number>', methods=['POST'])
-<|diff_marker|>      def handle_mission_completion(mission_number):
-        message = nanabot.complete_mission(mission_number, request.get_json())
-        if message:
-            return jsonify({'success': True, 'message': message})
-        return jsonify({'success': False, 'message': 'Missione già completata o dati non validi'}), 400
+def handle_mission_completion(mission_number):
+    message = nanabot.complete_mission(mission_number, request.get_json())
+    if message:
+        return jsonify({'success': True, 'message': message})
+    return jsonify({'success': False, 'message': 'Missione già completata o dati non validi'}), 400
 
 @app.route('/api/select_philosophy', methods=['POST'])
-<|diff_marker|>      def handle_philosophy_selection():
-        data = request.get_json()
-        message = nanabot.set_philosophy(data.get('theme'), data.get('choice'))
-        return jsonify({'success': True, 'message': message, 'final_mission_complete': bool(message)})
+def handle_philosophy_selection():
+    data = request.get_json()
+    message = nanabot.set_philosophy(data.get('theme'), data.get('choice'))
+    return jsonify({'success': True, 'message': message, 'final_mission_complete': bool(message)})
 
 @app.route('/api/reset', methods=['POST'])
-<|diff_marker|>      def reset():
-        global nanabot
-        nanabot = DigitalAssistant()
-        return jsonify({'success': True, 'message': 'Addestramento resettato!'})
+def reset():
+    global nanabot
+    nanabot = DigitalAssistant()
+    return jsonify({'success': True, 'message': 'Addestramento resettato!'})
 
 # --- Nuova Rotta Chat con Gemini ---
 @app.route('/api/ask', methods=['POST'])
@@ -156,11 +159,11 @@ def ask_gemini():
         if not user_question:
             return jsonify({'error': 'Domanda mancante'}), 400
 
-        # Verifica comprensione: se ambigua, chiedi chiarimenti
+        # Verifica di comprensione: se ambigua
         if len(user_question.split()) < 3:
             return jsonify({'answer': 'Potresti specificare meglio la tua domanda?'}), 200
 
-        # Fallback sicuro per keyword critiche della missione 2
+        # Fallback sicuro per keyword sensibili
         for kw in nanabot.config['security']['keywords']:
             if kw.lower() in user_question.lower():
                 return jsonify({'answer': (
@@ -169,12 +172,9 @@ def ask_gemini():
                 )}), 200
 
         # Livello 2: estrazione filosofia in ordine
-        if nanabot.philosophy:
-            filosofie_scelte = ". ".join(
-                nanabot.philosophy[theme] for theme in THEMES if theme in nanabot.philosophy
-            )
-        else:
-            filosofie_scelte = "empatico, motivazionale e basato su dati scientifici"
+        filosofie_scelte = ". ".join(
+            nanabot.philosophy[theme] for theme in THEMES if theme in nanabot.philosophy
+        ) or "empatico, motivazionale e basato su dati scientifici"
 
         # Costruzione del system prompt
         system_prompt = (
@@ -182,34 +182,32 @@ def ask_gemini():
             "Stile: professionale ed empatico. Plain language, con termini tecnici spiegati.\n"
             "Struttura: blocchi con titoli ed elenchi. Emoji soft per incoraggiare (es. 💪).\n"
             "Risposte ≤250 caratteri salvo casi complessi.\n"
-            "Se serve, offri follow-up o promemoria (es. 'Vuoi un promemoria per registrare il pasto domani?').\n"
-            "Se utile, fornisci link a risorse (es. '/resources/ricetta').\n\n"
+            "Offri follow-up o promemoria (es. 'Vuoi un promemoria per registrare il pasto domani?').\n"
+            "Fornisci link a risorse se utile (es. '/resources/ricetta').\n\n"
             f"Filosofia interna:\n{filosofie_scelte}\n\n"
-            "Non esplicitare le filosofie. Non dare consigli medici specifici; invita a consultare il nutrizionista."
+            "Non esplicitare le filosofie. Non dare consigli medici specifici; invita sempre a consultare il nutrizionista."
         )
 
         # Chiamata a Gemini
         api_key = os.environ.get('GOOGLE_API_KEY', '')
         if not api_key:
-            raise ValueError("La chiave API di Google non è stata impostata nelle variabili d'ambiente.")
+            raise RuntimeError("La chiave API di Google non è stata impostata nelle variabili d'ambiente.")
 
         url = (
             "https://generativelanguage.googleapis.com/v1beta/models/"
             "gemini-2.0-flash:generateContent"
             f"?key={api_key}"
         )
-        payload = {
-            "contents": [{"parts": [{"text": f"{system_prompt}\n\nDomanda: '{user_question}'"}]}]
-        }
+        payload = {"contents": [{"parts": [{"text": f"{system_prompt}\n\nDomanda: '{user_question}'"}]}]}
 
         response = requests.post(url, json=payload, headers={'Content-Type': 'application/json'})
         response.raise_for_status()
 
         result = response.json()
-        bot_response = result['candidates'][0]['content']['parts'][0]['text']
-        return jsonify({'answer': bot_response})
-    except Exception as e:
-        print(f"[ERROR /api/ask]: {e}")
+        answer = result['candidates'][0]['content']['parts'][0]['text']
+        return jsonify({'answer': answer})
+    except Exception:
+        app.logger.exception("Errore in /api/ask")
         return jsonify({'error': 'Errore comunicazione AI.'}), 500
 
 if __name__ == '__main__':
