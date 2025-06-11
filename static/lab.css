@@ -1,39 +1,206 @@
-/* style.css (Versione 8.0 - Laboratorio di Supervisione) */
-    :root { --primary-color: #6E9D00; --secondary-color: #B70000; --accent-color: #FFD100; --background-main: #f4f7f6; --background-panel: #ffffff; --background-input: #eef2f1; --border-color: #dde5e2; --shadow-color: rgba(0, 0, 0, 0.07); --text-primary: #1c2521; --text-secondary: #5a6e67; --text-on-primary: #ffffff; }
-    *, *::before, *::after { box-sizing: border-box; }
-    body { font-family: 'Nunito', sans-serif; background-color: var(--background-main); color: var(--text-primary); margin: 0; height: 100vh; overflow: hidden; }
-    #supervision-lab { display: flex; height: 100%; }
-    #knowledge-base-panel { width: 25%; min-width: 300px; border-right: 1px solid var(--border-color); display: flex; flex-direction: column; }
-    #simulation-panel { flex-grow: 1; display: flex; flex-direction: column; }
-    #review-panel { width: 30%; min-width: 350px; border-left: 1px solid var(--border-color); background-color: var(--background-panel); display: flex; flex-direction: column; }
-    #review-panel.hidden { display: none; }
-    .panel-header { display: flex; justify-content: space-between; align-items: center; padding: 15px 20px; border-bottom: 1px solid var(--border-color); background-color: var(--background-panel); flex-shrink: 0; }
-    .panel-header h3 { font-size: 1.1rem; margin: 0; }
-    .panel-content { padding: 20px; overflow-y: auto; flex-grow: 1; }
-    #kb-list { list-style: none; padding: 0; margin: 0; }
-    .kb-item { padding: 15px; border-radius: 8px; cursor: pointer; transition: background-color 0.2s ease; }
-    .kb-item:hover { background-color: var(--background-input); }
-    .kb-question { display: block; font-weight: 700; margin-bottom: 5px; }
-    .kb-answer { font-size: 0.9rem; color: var(--text-secondary); margin: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    #chat-container { display: flex; flex-direction: column; gap: 20px; }
-    .chat-empty-state { text-align: center; margin: auto; color: var(--text-secondary); }
-    .chat-empty-state img { max-width: 120px; }
-    .chat-empty-state h4 { font-size: 1.2rem; color: var(--text-primary); }
-    #chat-input-area { padding: 15px; border-top: 1px solid var(--border-color); display: flex; gap: 10px; align-items: flex-start; background-color: var(--background-panel); }
-    #user-prompt { flex-grow: 1; border: 1px solid var(--border-color); border-radius: 8px; padding: 12px 15px; font-family: 'Nunito', sans-serif; font-size: 1rem; resize: none; background-color: var(--background-input); min-height: 50px; }
-    #user-prompt:focus { outline: none; border-color: var(--primary-color); box-shadow: 0 0 0 2px rgba(110, 157, 0, 0.2); }
-    .review-section { margin-bottom: 25px; }
-    .review-section label { display: block; font-weight: 700; margin-bottom: 8px; color: var(--text-secondary); font-size: 0.9rem; }
-    .review-section p { margin: 0; padding: 12px; background-color: var(--background-input); border-radius: 8px; }
-    #review-final-answer { width: 100%; min-height: 150px; border: 1px solid var(--border-color); border-radius: 8px; padding: 12px; font-size: 1rem; resize: vertical; }
-    .review-actions { display: flex; gap: 10px; margin-top: auto; padding-top: 20px; }
-    .btn-icon { background: none; border: none; border-radius: 50%; width: 36px; height: 36px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: background-color 0.2s ease; font-size: 1.5rem; color: var(--text-secondary); }
-    .btn-icon:hover { background-color: var(--background-input); }
-    #send-btn svg { width: 20px; height: 20px; }
-    #send-btn:disabled { opacity: 0.5; cursor: not-allowed; }
-    .btn { padding: 10px 20px; font-weight: 700; border-radius: 8px; border: none; cursor: pointer; transition: background-color 0.2s ease; flex-grow: 1; }
-    .btn-primary { background-color: var(--primary-color); color: var(--text-on-primary); }
-    .btn-primary:hover { background-color: #587f00; }
-    .btn-secondary { background-color: var(--background-input); color: var(--text-primary); }
-    .btn-secondary:hover { background-color: #dce5e1; }
-    
+/* --- NUOVA IDENTITÀ VISIVA - Basata sulla Dashboard --- */
+:root {
+    --primary-yellow: #FFD15B;
+    --background-cream: #FFFDF6;
+    --white: #ffffff;
+    --dark-text: #3D405B; /* Un grigio scuro, non nero assoluto */
+    --medium-text: #8D99AE;
+    --border-color: #E2E8F0;
+    --soft-red: #FADADD;
+    --soft-blue: #DDEEFE;
+    --font-sans: 'Poppins', sans-serif;
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: var(--font-sans);
+    background-color: var(--background-cream);
+    color: var(--dark-text);
+    line-height: 1.6;
+}
+
+/* --- Struttura Principale --- */
+.main-container {
+    display: flex;
+    gap: 2rem;
+    padding: 2rem;
+    max-width: 1400px;
+    margin: auto;
+}
+
+.control-panel {
+    flex: 3;
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.preview-panel {
+    flex: 2;
+    position: sticky;
+    top: 2rem;
+    height: fit-content;
+}
+
+/* --- Componenti Stile "Ainana" --- */
+.card {
+    background-color: var(--white);
+    border-radius: 20px; /* Bordo molto arrotondato */
+    padding: 2rem;
+    box-shadow: 0px 8px 24px rgba(149, 157, 165, 0.1); /* Ombra più leggera */
+    border: none;
+}
+
+h1 { font-size: 2.25rem; font-weight: 700; color: var(--dark-text); }
+h2 { font-size: 1.25rem; font-weight: 600; margin-bottom: 0.5rem; }
+h4 { font-size: 1rem; color: var(--medium-text); font-weight: 400; }
+
+.page-header {
+    margin-bottom: 1rem;
+}
+
+.btn {
+    padding: 0.8rem 1.5rem;
+    border-radius: 14px;
+    font-weight: 600;
+    font-size: 0.9rem;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s ease-in-out;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.btn-primary {
+    background-color: var(--primary-yellow);
+    color: var(--dark-text);
+}
+.btn-primary:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(255, 209, 91, 0.4); }
+.btn-primary:disabled { background-color: #E2E8F0; color: var(--medium-text); cursor: not-allowed; }
+
+.btn-secondary {
+    background-color: var(--white);
+    color: var(--dark-text);
+    border: 1px solid var(--border-color);
+}
+.btn-secondary:hover { border-color: var(--primary-yellow); }
+
+/* --- Componenti Specifici Stile "Ainana" --- */
+.toggle-switch {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+.toggle-switch .switch {
+    position: relative;
+    display: inline-block;
+    width: 50px;
+    height: 28px;
+}
+.toggle-switch .switch input { display: none; }
+.slider {
+    position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0;
+    background-color: var(--border-color);
+    transition: .4s;
+    border-radius: 28px;
+}
+.slider:before {
+    position: absolute; content: ""; height: 20px; width: 20px; left: 4px; bottom: 4px;
+    background-color: white;
+    transition: .4s;
+    border-radius: 50%;
+}
+input:checked + .slider { background-color: var(--primary-yellow); }
+input:checked + .slider:before { transform: translateX(22px); }
+
+.input-description { font-size: 0.9rem; margin-bottom: 0.5rem; color: var(--medium-text); }
+textarea, .input-field {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    border: 1px solid var(--border-color);
+    border-radius: 14px;
+    font-size: 1rem;
+    font-family: var(--font-sans);
+    background-color: var(--background-cream);
+}
+textarea:focus, .input-field:focus {
+    outline: none;
+    border-color: var(--primary-yellow);
+    background-color: var(--white);
+}
+
+.quick-question-item {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 0.75rem 1rem;
+    background-color: var(--background-cream);
+    border-radius: 14px;
+    margin-bottom: 0.75rem;
+}
+.quick-question-item .actions { opacity: 0; transition: opacity 0.2s; }
+.quick-question-item:hover .actions { opacity: 1; }
+.quick-question-item .actions i { cursor: pointer; color: var(--medium-text); margin-left: 1rem; }
+.quick-question-item .actions i:hover { color: var(--primary-yellow); }
+
+/* --- Pannello Anteprima Stile "Ainana" --- */
+.chat-preview-wrapper .card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+.chat-window {
+    background-color: #F9FAFB;
+    border-radius: 16px;
+    height: 600px;
+    display: flex;
+    flex-direction: column;
+    border: 1px solid var(--border-color);
+}
+.chat-body {
+    flex-grow: 1;
+    padding: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+.chat-bubble {
+    padding: 0.8rem 1.2rem;
+    border-radius: 18px;
+    max-width: 80%;
+    width: fit-content;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+}
+.bot {
+    background-color: var(--white);
+    border-top-left-radius: 4px;
+    align-self: flex-start;
+}
+.chat-quick-replies {
+    padding: 0 1.5rem 1.5rem 1.5rem;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+.quick-reply-btn {
+    background-color: var(--white);
+    color: var(--dark-text);
+    border: 1px solid var(--border-color);
+    border-radius: 20px;
+    padding: 0.5rem 1rem;
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+.quick-reply-btn:hover { background-color: var(--primary-yellow); border-color: var(--primary-yellow); }
+
+
+/* --- Media Query per Responsiveness --- */
+@media (max-width: 1024px) {
+    .main-container { flex-direction: column; }
+    .preview-panel { position: static; }
+}
