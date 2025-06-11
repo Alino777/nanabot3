@@ -1,4 +1,10 @@
-:root { --primary-yellow: #FFD15B; --background-cream: #FFFDF6; --white: #ffffff; --dark-text: #3D405B; --medium-text: #8D99AE; --border-color: #E2E8F0; --font-sans: 'Poppins', sans-serif; --danger-color: #e53e3e; }
+/* lab.css - Versione Unica e Definitiva */
+
+:root {
+    --primary-yellow: #FFD15B; --background-cream: #FFFDF6; --white: #ffffff;
+    --dark-text: #3D405B; --medium-text: #8D99AE; --border-color: #E2E8F0;
+    --danger-color: #e53e3e; --font-sans: 'Poppins', sans-serif;
+}
 * { box-sizing: border-box; margin: 0; padding: 0; }
 body { font-family: var(--font-sans); background-color: var(--background-cream); color: var(--dark-text); line-height: 1.6; }
 .main-container { display: flex; gap: 2rem; padding: 2rem; max-width: 1400px; margin: auto; }
