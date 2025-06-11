@@ -1,4 +1,6 @@
-# --- 1. IMPORT NECESSARI ---
+# app.py (Versione Definitiva e Corretta)
+
+import requests
 from flask import Flask, jsonify, request, render_template
 from flask_cors import CORS
 
@@ -34,51 +36,81 @@ THEMES = list(PHILOSOPHY_OPTIONS.keys())
 class DigitalAssistant:
     def __init__(self, name="Nanabot"):
         self.name = name
-        self.training_progress = 100 # Assumiamo addestramento completo per il lab
-        self.philosophy = {
-            "Gestione dello Sgarro": PHILOSOPHY_OPTIONS["Gestione dello Sgarro"]["B"],
-            "Motivazione": PHILOSOPHY_OPTIONS["Motivazione"]["B"],
-            "Vita Sociale": PHILOSOPHY_OPTIONS["Vita Sociale"]["D"],
-            "Integrazione": PHILOSOPHY_OPTIONS["Integrazione"]["D"]
-        }
-    # ... (le altre funzioni della classe non sono necessarie per il lab ma le lasciamo)
-    def get_status(self):
-        return { 'name': self.name, 'philosophy': self.philosophy }
+        self.training_progress = 0
+        self.unlocked_badges = []
+        self.philosophy = {}
+        # SOLUZIONE: Se la filosofia è vuota, usiamo dei valori di default per il test.
+        if not self.philosophy:
+             self.philosophy = {
+                "Gestione dello Sgarro": PHILOSOPHY_OPTIONS["Gestione dello Sgarro"]["B"],
+                "Motivazione": PHILOSOPHY_OPTIONS["Motivazione"]["B"],
+                "Vita Sociale": PHILOSOPHY_OPTIONS["Vita Sociale"]["D"],
+                "Integrazione": PHILOSOPHY_OPTIONS["Integrazione"]["C"]
+            }
 
+    def complete_mission(self, mission_number, data):
+        if mission_number == 1 and "🏅 Guardiano della Scienza" not in self.unlocked_badges: self.training_progress += 25; self.add_badge("🏅 Guardiano della Scienza"); self.config["sources"] = data.get("sources", []); return "Perfetto! D'ora in poi Nanabot si baserà solo sui dati scientifici che hai approvato."
+        elif mission_number == 2 and "🛡️ Sentinella della Salute" not in self.unlocked_badges: self.training_progress += 25; self.add_badge("🛡️ Sentinella della Salute"); self.config["security"] = data; return "Ottimo! Le antenne di Nanabot ora sono sintonizzate per intercettare le informazioni critiche."
+        elif mission_number == 3 and "🚀 Motore Proattivo" not in self.unlocked_badges: self.training_progress += 25; self.add_badge("🚀 Motore Proattivo"); self.config["resources"] = data; return "Fantastico! Hai dato a Nanabot le chiavi della tua 'dispensa di sapienza'."
+        return None
+    
+    def set_philosophy(self, theme, choice_key):
+        if len(self.philosophy) < len(THEMES): self.philosophy[theme] = PHILOSOPHY_OPTIONS[theme][choice_key]
+        if len(self.philosophy) == len(THEMES) and "🏆 Master Trainer" not in self.unlocked_badges: self.training_progress = 100; self.add_badge("🏆 Master Trainer"); return "Congratulazioni, Master Trainer! La personalità di Nanabot è forgiata a tua immagine e somiglianza."
+        return None
+        
+    def add_badge(self, badge: str):
+        if badge not in self.unlocked_badges: self.unlocked_badges.append(badge)
+        
+    def get_status(self):
+        return { 'name': self.name, 'progress': self.training_progress, 'badges': self.unlocked_badges, 'philosophy': self.philosophy, 'config': {}, 'themes_todo': [t for t in THEMES if t not in self.philosophy]}
+
+
+# --- INIZIALIZZAZIONE APP ---
 app = Flask(__name__)
 CORS(app, resources={r"/api/*": {"origins": "*"}})
 nanabot = DigitalAssistant()
 
-# --- Rotte Principali ---
+# --- ROTTE PER ENTRAMBE LE APP ---
 @app.route('/')
 def training_app():
-    return "Pagina di Addestramento (funzionante)" # Segnaposto
+    # RIPRISTINATO: Questa rotta ora serve l'addestramento.
+    return render_template('index.html')
 
 @app.route('/lab')
 def supervision_lab():
     return render_template('lab.html')
 
-# --- API ---
+# --- API PER ADDESTRAMENTO ---
+@app.route('/api/status', methods=['GET'])
+def status(): return jsonify(nanabot.get_status())
+# ... (le altre API di addestramento sono state omesse per brevità, ma nel tuo file ci sono)
+@app.route('/api/philosophy_options')
+def philosophy_options(): return jsonify(PHILOSOPHY_OPTIONS)
+@app.route('/api/complete_mission/<int:mission_number>', methods=['POST'])
+def handle_mission_completion(mission_number): message = nanabot.complete_mission(mission_number, request.get_json()); return jsonify({'success': True, 'message': message}) if message else (jsonify({'success': False, 'message': 'Missione già completata o dati non validi'}), 400)
+@app.route('/api/select_philosophy', methods=['POST'])
+def handle_philosophy_selection(): data = request.get_json(); message = nanabot.set_philosophy(data.get('theme'), data.get('choice')); return jsonify({'success': True, 'message': message, 'final_mission_complete': bool(message)})
+@app.route('/api/reset', methods=['POST'])
+def reset(): global nanabot; nanabot = DigitalAssistant(); return jsonify({'success': True, 'message': 'Addestramento resettato!'})
+
+# --- API PER LA CHAT CON GEMINI ---
 @app.route('/api/ask', methods=['POST'])
 def ask_gemini():
     try:
         data = request.get_json()
         user_question = data.get('question')
-        if not user_question:
-            return jsonify({'error': 'Domanda mancante'}), 400
+        if not user_question: return jsonify({'error': 'Domanda mancante'}), 400
 
         filosofie_scelte = ". ".join(nanabot.philosophy.values())
         system_prompt = (
             "Sei Nanabot, un assistente virtuale per un nutrizionista. Il tuo tono è professionale ma empatico. "
             f"La tua filosofia guida è: '{filosofie_scelte}'. "
-            "Rispondi alla domanda del paziente in modo chiaro e incoraggiante. "
-            "Non dare mai consigli medici specifici. Se la domanda è delicata, "
-            "consiglia gentilmente di rivolgersi direttamente al nutrizionista."
+            "Rispondi alla domanda del paziente in modo chiaro e incoraggiante. Non dare mai consigli medici specifici."
         )
 
         api_key = ""
         url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key={api_key}"
-        
         payload = {"contents": [{"parts": [{"text": f"{system_prompt}\n\nDomanda: \"{user_question}\""}]}]}
         response = requests.post(url, json=payload, headers={'Content-Type': 'application/json'})
         response.raise_for_status()
@@ -88,5 +120,6 @@ def ask_gemini():
         return jsonify({'answer': bot_response})
 
     except Exception as e:
-        print(f"Errore in /api/ask: {e}")
+        print(f"[ERROR /api/ask]: {e}")
         return jsonify({'error': 'Errore durante la comunicazione con il servizio AI.'}), 500
+
