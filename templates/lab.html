@@ -30,14 +30,33 @@
             </header>
 
             <div class="card">
-                <h2>Attivazione e Messaggio</h2>
-                <div class="toggle-switch" style="margin-bottom: 1.5rem;">
-                    <span>Attiva Assistente per i pazienti</span>
-                    <label class="switch">
-                        <input type="checkbox" checked>
-                        <span class="slider"></span>
-                    </label>
+                <div class="main-toggle-wrapper">
+                    <h2>Assistente Virtuale</h2>
+                    <div class="toggle-switch">
+                        <label class="switch">
+                            <input type="checkbox" id="main-toggle" checked>
+                            <span class="slider"></span>
+                        </label>
+                    </div>
                 </div>
+                <p class="input-description">
+                    Attiva o disattiva l'assistente per tutti i pazienti.
+                </p>
+            
+                <hr class="card-divider">
+            
+                <div id="exceptions-section">
+                    <h3>Eccezioni</h3>
+                    <p class="input-description">
+                        Escludi l'assistente per i pazienti che seguono diete specifiche.
+                    </p>
+                    <div id="tag-selector-container" class="tag-selector-container">
+                        <!-- I tag verranno aggiunti qui da JavaScript -->
+                        <span class="tag-item">Celiachia <i class="fa-solid fa-xmark"></i></span>
+                        <input type="text" id="exception-input" placeholder="Aggiungi una dieta...">
+                    </div>
+                </div>
+            </div>
                 <p class="input-description">
                     Messaggio di benvenuto (usa <code>{nome_paziente}</code>)
                 </p>

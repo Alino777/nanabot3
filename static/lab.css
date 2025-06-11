@@ -208,3 +208,75 @@ textarea:focus, .input-field:focus {
     .main-container { flex-direction: column; }
     .preview-panel { position: static; }
 }
+/* Stili per la nuova Card di Attivazione Condizionale */
+
+.main-toggle-wrapper {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.main-toggle-wrapper h2 {
+    margin-bottom: 0;
+}
+
+hr.card-divider {
+    border: none;
+    height: 1px;
+    background-color: var(--border-color);
+    margin: 2rem 0;
+}
+
+#exceptions-section.disabled {
+    opacity: 0.5;
+    pointer-events: none; /* Rende la sezione non interagibile */
+}
+
+#exceptions-section h3 {
+    font-size: 1.1rem;
+    font-weight: 600;
+    margin-bottom: 0.25rem;
+}
+
+.tag-selector-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    padding: 0.5rem;
+    border: 1px solid var(--border-color);
+    border-radius: 14px;
+    background-color: var(--background-cream);
+    margin-top: 1rem;
+    cursor: text; /* Fa sembrare l'intera area un campo di testo */
+}
+
+.tag-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    background-color: var(--primary-yellow);
+    color: var(--dark-text);
+    padding: 0.3rem 0.8rem;
+    border-radius: 20px;
+    font-weight: 500;
+    font-size: 0.9rem;
+}
+
+.tag-item i {
+    cursor: pointer;
+    transition: color 0.2s;
+}
+.tag-item i:hover {
+    color: var(--white);
+}
+
+#exception-input {
+    flex-grow: 1;
+    border: none;
+    background: none;
+    outline: none;
+    padding: 0.25rem;
+    font-family: var(--font-sans);
+    font-size: 1rem;
+    min-width: 150px;
+}
