@@ -3,15 +3,38 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="Un'applicazione per addestrare l'intelligenza artificiale Nanabot a sviluppare la sua filosofia di coaching.">
-    <title>Addestramento Nanabot</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;800&display=swap" rel="stylesheet">
+    <title>Test di Deploy</title>
+    <style>
+        /* CSS messo direttamente qui per eliminare dipendenze esterne */
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            display: grid;
+            place-content: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #eef;
+            text-align: center;
+        }
+        div {
+            background-color: white;
+            padding: 40px;
+            border-radius: 16px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #2a2a72;
+            margin: 0;
+        }
+        p {
+            color: #666;
+            margin-top: 10px;
+        }
+    </style>
 </head>
 <body>
-    <div id="app">
-        </div>
-        <script src="{{ url_for('static', filename='script.js') }}" defer></script>
+    <div>
+        <h1>✅ Deploy Riuscito!</h1>
+        <p>Se vedi questo messaggio, la configurazione di base funziona.</p>
+    </div>
 </body>
 </html>
