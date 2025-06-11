@@ -9,71 +9,39 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
 
-    <!-- Per le icone come il "+" e il cestino -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
 
-    <!-- Colleghiamo il file CSS che creeremo -->
     <link rel="stylesheet" href="{{ url_for('static', filename='lab.css') }}">
 </head>
 <body>
 
     <main class="main-container">
 
-        <!-- ======================================= -->
-        <!-- PANNELLO SINISTRO: Pannello di Controllo -->
-        <!-- ======================================= -->
         <section class="control-panel">
             
-            <header class="page-header">
-                <h1>Assistente Virtuale</h1>
-                <h4>Imposta, personalizza e testa il chatbot per i tuoi pazienti.</h4>
-            </header>
-
+            <!-- La card di Attivazione rimane invariata -->
             <div class="card">
-                <div class="main-toggle-wrapper">
-                    <h2>Assistente Virtuale</h2>
-                    <div class="toggle-switch">
-                        <label class="switch">
-                            <input type="checkbox" id="main-toggle" checked>
-                            <span class="slider"></span>
-                        </label>
-                    </div>
-                </div>
-                <p class="input-description">
-                    Attiva o disattiva l'assistente per tutti i pazienti.
-                </p>
-            
-                <hr class="card-divider">
-            
-                <div id="exceptions-section">
-                    <h3>Eccezioni</h3>
-                    <p class="input-description">
-                        Escludi l'assistente per i pazienti che seguono diete specifiche.
-                    </p>
-                    <div class="tag-selector-wrapper">
-                        <div id="tag-selector-container" class="tag-selector-container">
-                            <!-- I tag verranno aggiunti qui da JavaScript -->
-                            <input type="text" id="exception-input" placeholder="Aggiungi una dieta...">
-                        </div>
-                        <!-- Contenitore per i suggerimenti, inizialmente nascosto -->
-                        <div id="suggestions-panel" class="suggestions-panel hidden"></div>
-                    </div>
-                </div>                
-            </div>
-                <p class="input-description">
-                    Messaggio di benvenuto (usa <code>{nome_paziente}</code>)
-                </p>
-                <textarea id="welcome-message" rows="3">Ciao {nome_paziente}! Sono il tuo assistente virtuale. Sono qui per aiutarti con il tuo piano alimentare.</textarea>
+                <!-- ... Il tuo codice per la card di Attivazione Condizionale va qui ... -->
             </div>
 
+            <!-- MODIFICA QUI: La card delle Domande Rapide -->
             <div class="card">
                 <div class="card-header">
                     <h2>Domande Rapide</h2>
-                    <button id="add-quick-question-btn" class="btn btn-primary"><i class="fa-solid fa-plus"></i>Aggiungi</button>
+                    <div class="header-actions">
+                        <button id="manage-all-btn" class="btn btn-secondary">Gestisci Tutte</button>
+                        <button id="add-quick-question-btn" class="btn btn-primary"><i class="fa-solid fa-plus"></i>Aggiungi</button>
+                    </div>
                 </div>
                 
                 <div id="quick-question-list">
-                    <!-- Le domande rapide verranno aggiunte qui da JavaScript -->
+                    <!-- Esempio di domanda rapida, verrà gestito da JS -->
+                    <div class="quick-question-item">
+                        <span>Cosa posso mangiare a colazione?</span>
+                        <div class="actions">
+                            <i class="fa-solid fa-pencil"></i><i class="fa-solid fa-trash-can"></i>
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -83,38 +51,38 @@
 
         </section>
 
-        <!-- ======================================= -->
-        <!-- PANNELLO DESTRO: Anteprima Live       -->
-        <!-- ======================================= -->
+        <!-- Il Pannello di Anteprima rimane invariato -->
         <aside class="preview-panel">
-            <div class="card">
-                <div class="card-header">
-                    <h2>Anteprima Live</h2>
+            <!-- ... Il tuo codice per il preview-panel va qui ... -->
+        </aside>
+    </main>
+    
+    <!-- NUOVO: Struttura della Finestra Modale, nascosta di default -->
+    <div id="add-question-modal" class="modal-overlay hidden">
+        <div class="modal-content">
+            <header class="modal-header">
+                <h2>Aggiungi Domanda Rapida</h2>
+                <button id="close-modal-btn" class="btn-icon">&times;</button>
+            </header>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label for="modal-question">Domanda del paziente</label>
+                    <textarea id="modal-question" rows="3" placeholder="Es. Posso bere caffè prima di allenarmi?"></textarea>
                 </div>
-                 <div class="patient-selector">
-                    <label for="patient-select" class="input-description">Simula come:</label>
-                    <select id="patient-select" class="input-field">
-                        <option value="Mario Rossi">Mario Rossi</option>
-                        <option value="Laura Bianchi">Laura Bianchi</option>
-                    </select>
-                </div>
-                <div class="chat-window">
-                    <div class="chat-body">
-                        <div id="preview-welcome-message" class="chat-bubble bot">
-                            <!-- Il messaggio di benvenuto apparirà qui -->
-                        </div>
-                    </div>
-                    <div id="preview-quick-replies" class="chat-quick-replies">
-                        <!-- I pulsanti delle domande rapide appariranno qui -->
-                    </div>
+                <div class="form-group">
+                    <label for="modal-answer">La tua risposta pre-impostata</label>
+                    <textarea id="modal-answer" rows="6" placeholder="Scrivi la risposta che il bot dovrà dare..."></textarea>
+                    <p class="input-description">Questa risposta verrà usata esattamente come la scrivi, bypassando l'IA.</p>
                 </div>
             </div>
-        </aside>
+            <footer class="modal-footer">
+                <button id="cancel-modal-btn" class="btn btn-secondary">Annulla</button>
+                <button id="save-modal-btn" class="btn btn-primary" disabled>Salva Domanda</button>
+            </footer>
+        </div>
+    </div>
 
-    </main>
 
-    <!-- Colleghiamo il file JavaScript che renderà tutto interattivo -->
     <script src="{{ url_for('static', filename='lab.js') }}" defer></script>
-
 </body>
 </html>
