@@ -1,4 +1,4 @@
-// lab.js (Versione 4.0 - Con Chat Interattiva)
+// lab.js (Versione 5.0 - UI Rifinita e Completamente Interattiva)
 
 document.addEventListener('DOMContentLoaded', () => {
     // --- Stato dell'Applicazione ---
@@ -7,29 +7,27 @@ document.addEventListener('DOMContentLoaded', () => {
         exceptions: new Set(['Celiachia']),
         welcomeMessage: "Ciao {nome_paziente}! Sono il tuo assistente virtuale...",
         quickQuestions: [
-            { id: 1, q: "Cosa posso mangiare a colazione?", a: "..." },
-            { id: 2, q: "Quali sono gli spuntini permessi?", a: "..." }
+            { id: 1, q: "Cosa posso mangiare a colazione?", a: "Per colazione, consiglio yogurt greco con frutta fresca e una manciata di mandorle." },
+            { id: 2, q: "Quali sono gli spuntini permessi?", a: "Ottimi spuntini includono frutta, verdura cruda, o una piccola porzione di frutta secca." }
         ],
         selectedPatient: "Mario Rossi",
-        chatHistory: [] // NUOVO: Per memorizzare la conversazione
+        chatHistory: []
     };
 
     // --- Riferimenti al DOM ---
     const chatBody = document.getElementById('chat-body');
     const chatInput = document.getElementById('chat-input');
     const chatSendBtn = document.getElementById('chat-send-btn');
+    const previewQuickReplies = document.getElementById('preview-quick-replies');
     // ... (tutti gli altri riferimenti al DOM che avevamo prima)
     const mainToggle = document.getElementById('main-toggle');
     const exceptionsSection = document.getElementById('exceptions-section');
     const tagContainer = document.getElementById('tag-selector-container');
     const tagInput = document.getElementById('exception-input');
-    const suggestionsPanel = document.getElementById('suggestions-panel');
     const welcomeMessageTextarea = document.getElementById('welcome-message');
     const quickQuestionList = document.getElementById('quick-question-list');
     const addQuestionBtn = document.getElementById('add-quick-question-btn');
     const patientSelect = document.getElementById('patient-select');
-    const previewWelcomeMessage = document.getElementById('preview-welcome-message');
-    const previewQuickReplies = document.getElementById('preview-quick-replies');
     const modalOverlay = document.getElementById('add-question-modal');
     const modalTitle = document.getElementById('modal-title');
     const closeModalBtn = document.getElementById('close-modal-btn');
@@ -39,96 +37,103 @@ document.addEventListener('DOMContentLoaded', () => {
     const modalAnswerTextarea = document.getElementById('modal-answer');
     let editingQuestionId = null;
 
-    // --- NUOVE Funzioni per la Chat ---
-
-    // Renderizza l'intera cronologia della chat
-    function renderChat() {
-        chatBody.innerHTML = ''; // Svuota la chat
-        
-        // Aggiunge il messaggio di benvenuto come primo messaggio
-        const patientName = state.selectedPatient.split(' ')[0];
-        const welcomeText = state.welcomeMessage.replace('{nome_paziente}', patientName);
-        addMessageToChat(welcomeText, 'bot');
-
-        // Aggiunge tutti i messaggi della cronologia
-        state.chatHistory.forEach(msg => {
-            addMessageToChat(msg.text, msg.sender, false);
-        });
-    }
-
-    // Aggiunge una singola bolla di messaggio
+    // --- Funzioni di Chat ---
+    
     function addMessageToChat(text, sender, shouldScroll = true) {
         const bubble = document.createElement('div');
         bubble.className = `chat-bubble ${sender}`;
-        
-        if (sender === 'bot-thinking') {
-            bubble.innerHTML = '<div class="typing-indicator"><span></span><span></span><span></span></div>';
-        } else {
-            bubble.textContent = text;
-        }
-        
+        bubble.innerHTML = (sender === 'bot-thinking') ? '<div class="typing-indicator"><span></span><span></span><span></span></div>' : text;
         chatBody.appendChild(bubble);
-        if (shouldScroll) {
-            chatBody.scrollTop = chatBody.scrollHeight;
-        }
-        return bubble; // Restituisce l'elemento per poterlo rimuovere (es. il "thinking")
+        if (shouldScroll) chatBody.scrollTop = chatBody.scrollHeight;
+        return bubble;
     }
 
-    // Gestisce l'invio di un nuovo messaggio
-    function handleSendMessage() {
-        const text = chatInput.value.trim();
+    // Funzione centralizzata per gestire l'invio di un messaggio (da input o da pulsante)
+    function processUserMessage(text) {
         if (!text) return;
 
-        // Nasconde le domande rapide e aggiunge il messaggio dell'utente
         previewQuickReplies.style.display = 'none';
         state.chatHistory.push({ sender: 'user', text });
         addMessageToChat(text, 'user');
-        chatInput.value = '';
-        chatInput.style.height = '24px'; // Resetta l'altezza
-        chatSendBtn.disabled = true;
 
-        // Simula la riflessione e la risposta del bot
         const thinkingBubble = addMessageToChat('', 'bot-thinking');
         
+        // SIMULAZIONE RISPOSTA GEMINI
+        // Qui in futuro ci sarà la vera chiamata API
         setTimeout(() => {
             thinkingBubble.remove();
             const botResponse = "Questa è una risposta simulata. Presto sarò collegato a Gemini!";
             state.chatHistory.push({ sender: 'bot', text: botResponse });
             addMessageToChat(botResponse, 'bot');
-        }, 2000);
+        }, 1500);
     }
 
-    // --- Gestione Eventi della Chat ---
-    chatInput.addEventListener('input', () => {
-        chatSendBtn.disabled = chatInput.value.trim() === '';
-        // Fa crescere la textarea automaticamente
-        chatInput.style.height = 'auto';
-        chatInput.style.height = (chatInput.scrollHeight) + 'px';
-    });
-
-    chatInput.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter' && !e.shiftKey) {
-            e.preventDefault();
-            handleSendMessage();
-        }
-    });
-
-    chatSendBtn.addEventListener('click', handleSendMessage);
-
-    // --- Funzioni e Logica Esistente (non viene toccata) ---
-    // ... (tutto il codice per le eccezioni, le domande rapide, la modale, ecc.)
-    function render() { mainToggle.checked = state.assistantEnabled; exceptionsSection.classList.toggle('disabled', !state.assistantEnabled); tagContainer.querySelectorAll('.tag-item').forEach(tag => tag.remove()); state.exceptions.forEach(tagText => { const tagElement = createTagElement(tagText); tagContainer.insertBefore(tagElement, tagInput); }); welcomeMessageTextarea.value = state.welcomeMessage; quickQuestionList.innerHTML = ''; state.quickQuestions.forEach(qq => { const item = document.createElement('div'); item.className = 'quick-question-item'; item.innerHTML = `<span>${qq.q}</span><div class="actions"><i class="fa-solid fa-pencil" data-id="${qq.id}"></i><i class="fa-solid fa-trash-can" data-id="${qq.id}"></i></div>`; quickQuestionList.appendChild(item); }); renderPreview(); }
-    function renderPreview() { const patientName = state.selectedPatient; previewWelcomeMessage.textContent = state.welcomeMessage.replace('{nome_paziente}', patientName.split(' ')[0]); previewQuickReplies.innerHTML = ''; state.quickQuestions.forEach(qq => { const btn = document.createElement('button'); btn.className = 'quick-reply-btn'; btn.textContent = qq.q; previewQuickReplies.appendChild(btn); }); previewQuickReplies.style.display = 'flex'; state.chatHistory = []; renderChat(); }
+    // --- Funzioni di Rendering e UI ---
+    
+    function render() {
+        // ... (la maggior parte della funzione render rimane invariata)
+        mainToggle.checked = state.assistantEnabled;
+        exceptionsSection.classList.toggle('disabled', !state.assistantEnabled);
+        tagContainer.querySelectorAll('.tag-item').forEach(tag => tag.remove());
+        state.exceptions.forEach(tagText => {
+            const tagElement = createTagElement(tagText);
+            tagContainer.insertBefore(tagElement, tagInput);
+        });
+        welcomeMessageTextarea.value = state.welcomeMessage;
+        quickQuestionList.innerHTML = '';
+        state.quickQuestions.forEach(qq => {
+            const item = document.createElement('div');
+            item.className = 'quick-question-item';
+            item.innerHTML = `<span>${qq.q}</span><div class="actions"><i class="fa-solid fa-pencil" data-id="${qq.id}"></i><i class="fa-solid fa-trash-can" data-id="${qq.id}"></i></div>`;
+            quickQuestionList.appendChild(item);
+        });
+        renderPreview();
+    }
+    
+    function renderPreview() {
+        // Resetta la chat e la cronologia quando cambia il paziente
+        state.chatHistory = [];
+        chatBody.innerHTML = '';
+        const patientName = state.selectedPatient.split(' ')[0];
+        const welcomeText = state.welcomeMessage.replace('{nome_paziente}', patientName);
+        addMessageToChat(welcomeText, 'bot');
+        
+        // Popola i pulsanti delle domande rapide
+        previewQuickReplies.innerHTML = '';
+        state.quickQuestions.forEach(qq => {
+            const btn = document.createElement('button');
+            btn.className = 'quick-reply-btn';
+            btn.textContent = qq.q;
+            previewQuickReplies.appendChild(btn);
+        });
+        previewQuickReplies.style.display = 'flex';
+    }
+    
+    // ... (Tutte le altre funzioni di utility e della modale rimangono invariate)
     function createTagElement(text) { const tagElement = document.createElement('span'); tagElement.className = 'tag-item'; tagElement.textContent = text; const removeIcon = document.createElement('i'); removeIcon.className = 'fa-solid fa-xmark'; removeIcon.dataset.tag = text; tagElement.appendChild(removeIcon); return tagElement; }
     function openModal(mode = 'add', id = null) { editingQuestionId = id; if (mode === 'edit') { const questionToEdit = state.quickQuestions.find(qq => qq.id === id); modalTitle.textContent = "Modifica Domanda Rapida"; modalQuestionTextarea.value = questionToEdit.q; modalAnswerTextarea.value = questionToEdit.a; } else { modalTitle.textContent = "Aggiungi Domanda Rapida"; modalQuestionTextarea.value = ''; modalAnswerTextarea.value = ''; } checkModalInputs(); modalOverlay.classList.remove('hidden'); }
     function closeModal() { modalOverlay.classList.add('hidden'); }
     function checkModalInputs() { saveModalBtn.disabled = !(modalQuestionTextarea.value.trim() && modalAnswerTextarea.value.trim()); }
+
+    // --- Gestione Eventi ---
     mainToggle.addEventListener('change', (e) => { state.assistantEnabled = e.target.checked; render(); });
     tagContainer.addEventListener('click', (e) => { if (e.target.tagName === 'I') { state.exceptions.delete(e.target.dataset.tag); render(); } });
     tagInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); const newTag = e.target.value.trim(); if (newTag) { state.exceptions.add(newTag); e.target.value = ''; render(); } } });
     welcomeMessageTextarea.addEventListener('input', (e) => { state.welcomeMessage = e.target.value; renderPreview(); });
     quickQuestionList.addEventListener('click', (e) => { const id = parseInt(e.target.dataset.id, 10); if (e.target.classList.contains('fa-pencil')) { openModal('edit', id); } if (e.target.classList.contains('fa-trash-can')) { if (confirm('Sei sicuro?')) { state.quickQuestions = state.quickQuestions.filter(qq => qq.id !== id); render(); } } });
     patientSelect.addEventListener('change', (e) => { state.selectedPatient = e.target.value; renderPreview(); });
+    chatInput.addEventListener('input', () => { chatSendBtn.disabled = chatInput.value.trim() === ''; chatInput.style.height = 'auto'; chatInput.style.height = (chatInput.scrollHeight) + 'px'; });
+    chatInput.addEventListener('keydown', (e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); processUserMessage(chatInput.value); chatInput.value=''; chatInput.style.height='24px'; chatSendBtn.disabled = true; } });
+    chatSendBtn.addEventListener('click', () => { processUserMessage(chatInput.value); chatInput.value=''; chatInput.style.height='24px'; chatSendBtn.disabled = true; });
+
+    // NUOVO: Event listener per i pulsanti delle domande rapide
+    previewQuickReplies.addEventListener('click', (e) => {
+        if (e.target.classList.contains('quick-reply-btn')) {
+            processUserMessage(e.target.textContent);
+        }
+    });
+
+    // Eventi della Modale
     addQuestionBtn.addEventListener('click', () => openModal('add'));
     closeModalBtn.addEventListener('click', closeModal);
     cancelModalBtn.addEventListener('click', closeModal);
