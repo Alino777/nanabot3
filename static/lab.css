@@ -204,3 +204,91 @@ textarea:focus, .input-field:focus {
     .main-container { flex-direction: column; }
     .preview-panel { position: static; }
 }
+
+#chat-container {
+    padding-bottom: 20px;
+}
+
+.chat-message-wrapper {
+    display: flex;
+    gap: 10px;
+    max-width: 85%;
+}
+
+.chat-avatar {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+.chat-bubble {
+    padding: 0.8rem 1.2rem;
+    border-radius: 18px;
+    box-shadow: 0 4px 10px var(--shadow-color);
+}
+
+/* Messaggi del Bot */
+.bot-wrapper {
+    align-self: flex-start;
+}
+.bot {
+    background-color: var(--white);
+    border-top-left-radius: 4px;
+}
+
+/* Messaggi dell'Utente */
+.user-wrapper {
+    align-self: flex-end;
+    flex-direction: row-reverse; /* Inverte l'ordine per allineare a destra */
+}
+.user {
+    background-color: var(--primary-color);
+    color: var(--text-primary);
+    border-top-right-radius: 4px;
+}
+
+/* Indicatore "sta scrivendo..." */
+.typing-indicator span {
+    height: 8px;
+    width: 8px;
+    background-color: #ccc;
+    border-radius: 50%;
+    display: inline-block;
+    animation: bounce 1.4s infinite ease-in-out both;
+}
+.typing-indicator span:nth-of-type(1) { animation-delay: -0.32s; }
+.typing-indicator span:nth-of-type(2) { animation-delay: -0.16s; }
+@keyframes bounce {
+  0%, 80%, 100% { transform: scale(0); }
+  40% { transform: scale(1.0); }
+}
+
+/* Card di proposta */
+.proposal-source {
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: var(--text-secondary);
+    margin-bottom: 8px;
+    opacity: 0.8;
+}
+.proposal-actions {
+    margin-top: 15px;
+    padding-top: 15px;
+    border-top: 1px solid var(--border-color);
+    display: flex;
+    gap: 10px;
+}
+.btn-chat {
+    background: none;
+    border: 1px solid var(--border-color);
+    padding: 5px 12px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 0.8rem;
+    font-weight: 600;
+    transition: background-color 0.2s;
+}
+.btn-chat:hover {
+    background-color: var(--background-input);
+}
