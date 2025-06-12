@@ -6,6 +6,7 @@ from flask import Flask, jsonify, request, render_template
 from flask_cors import CORS
 
 # --- 1. DATI E CLASSE DI LOGICA ---
+# Contiene la logica e i dati sia per l'addestramento che per il laboratorio.
 PHILOSOPHY_OPTIONS = {
     "Gestione dello Sgarro": {
         "A": "[METODICO SCIENTIFICO] Lo 'sgarro' è un dato. Analizziamolo per compensare il bilancio calorico settimanale senza impatti.",
@@ -36,18 +37,24 @@ THEMES = list(PHILOSOPHY_OPTIONS.keys())
 
 class DigitalAssistant:
     def __init__(self, name="Nanabot"):
-        # Stato per l'app di addestramento
         self.name = name
+        self.reset_training()
+        self.reset_lab_settings()
+
+    def reset_training(self):
         self.training_progress = 0
         self.unlocked_badges = []
         self.philosophy = {}
         self.config = {
             "sources": [],
-            "security": { "keywords": [], "coherence_checks": {} },
-            "resources": {}
+            "security": {
+                "keywords": ["diabete", "gravidanza", "farmaco", "dolore"],
+                "coherence_checks": {"Celiachia (Senza Glutine)": True, "Dieta Vegana": True, "Dieta Vegetariana": True, "Intolleranza al Lattosio": True, "Allergie Note": False, "Favismo": False }
+            },
+            "resources": {"patient_plans": True, "my_content": True, "external_content": False}
         }
-        
-        # Stato per la "Centrale di Comando" con dati di esempio
+
+    def reset_lab_settings(self):
         self.lab_settings = {
             "assistantEnabled": True,
             "exceptions": ['Celiachia'],
@@ -57,21 +64,23 @@ class DigitalAssistant:
                 { "id": 2, "q": "Quali sono gli spuntini permessi?", "a": "Ottimi spuntini includono frutta, verdura cruda, o una piccola porzione di frutta secca." }
             ]
         }
-
-    # Metodi per l'addestramento
+    
     def complete_mission(self, mission_number, data):
         if mission_number == 1 and "🏅 Guardiano della Scienza" not in self.unlocked_badges:
             self.training_progress += 25
             self.add_badge("🏅 Guardiano della Scienza")
-            return "Missione 1 completata."
+            self.config["sources"] = data.get("sources", [])
+            return "Perfetto! D'ora in poi Nanabot si baserà solo sui dati scientifici che hai approvato."
         elif mission_number == 2 and "🛡️ Sentinella della Salute" not in self.unlocked_badges:
             self.training_progress += 25
             self.add_badge("🛡️ Sentinella della Salute")
-            return "Missione 2 completata."
+            self.config["security"] = data
+            return "Ottimo! Le antenne di Nanabot ora sono sintonizzate per intercettare le informazioni critiche."
         elif mission_number == 3 and "🚀 Motore Proattivo" not in self.unlocked_badges:
             self.training_progress += 25
             self.add_badge("🚀 Motore Proattivo")
-            return "Missione 3 completata."
+            self.config["resources"] = data
+            return "Fantastico! Hai dato a Nanabot le chiavi della tua 'dispensa di sapienza'."
         return None
         
     def set_philosophy(self, theme, choice_key):
@@ -80,7 +89,7 @@ class DigitalAssistant:
         if len(self.philosophy) == len(THEMES) and "🏆 Master Trainer" not in self.unlocked_badges:
             self.training_progress = 100
             self.add_badge("🏆 Master Trainer")
-            return "Congratulazioni, addestramento completato!"
+            return "Congratulazioni, Master Trainer! La personalità di Nanabot è forgiata a tua immagine e somiglianza."
         return None
 
     def add_badge(self, badge: str):
@@ -123,7 +132,7 @@ def philosophy_options():
 @app.route('/api/complete_mission/<int:mission_number>', methods=['POST'])
 def handle_mission_completion(mission_number):
     message = nanabot.complete_mission(mission_number, request.get_json())
-    return jsonify({'success': True, 'message': message}) if message else (jsonify({'success': False}), 400)
+    return jsonify({'success': True, 'message': message}) if message else (jsonify({'success': False, 'message': 'Missione già completata'}), 400)
 
 @app.route('/api/select_philosophy', methods=['POST'])
 def handle_philosophy_selection():
@@ -133,8 +142,7 @@ def handle_philosophy_selection():
 
 @app.route('/api/reset', methods=['POST'])
 def reset():
-    global nanabot
-    nanabot = DigitalAssistant()
+    nanabot.reset_training()
     return jsonify({'success': True, 'message': 'Addestramento resettato!'})
 
 # --- 5. API PER LA CENTRALE DI COMANDO (/lab) ---
@@ -147,6 +155,7 @@ def update_settings():
     data = request.get_json()
     for key in ['assistantEnabled', 'exceptions', 'welcomeMessage', 'quickQuestions']:
         if key in data:
+            # Per le eccezioni, ci aspettiamo una lista dal JSON e la salviamo come lista
             nanabot.lab_settings[key] = data[key]
     print("Impostazioni del laboratorio salvate:", nanabot.lab_settings)
     return jsonify({'success': True, 'message': 'Impostazioni salvate con successo!'})
@@ -160,18 +169,15 @@ def ask_gemini():
         if not user_question:
             return jsonify({'error': 'Domanda mancante'}), 400
 
-        # LIVELLO 3: Controllo la Base di Conoscenza (Domande Rapide)
+        # LIVELLO 3: Controllo la Base di Conoscenza
         for qq in nanabot.lab_settings.get('quickQuestions', []):
             if qq['q'].strip().lower() == user_question.lower():
                 print(f"Risposta trovata nella Base di Conoscenza per: {user_question}")
                 return jsonify({'answer': qq['a']})
 
+        # LIVELLO 2 & 1: Se non trovo risposta, interrogo Gemini
         print(f"Nessuna risposta rapida trovata. Interrogo Gemini per: {user_question}")
-        
-        # LIVELLO 2: Estraggo la filosofia del nutrizionista
         filosofie_scelte = ". ".join(nanabot.philosophy.values()) if nanabot.philosophy else "empatico e scientifico"
-
-        # LIVELLO 1: Costruisco il prompt di base, con tutte le istruzioni
         system_prompt = (
             "Sei Nanabot, un assistente virtuale per un nutrizionista. Il tuo tono è professionale ma empatico. "
             "Sii conciso. Manda messaggi di massimo 250 caratteri a meno che non sia strettamente necessario per il tema.\n\n"
@@ -187,7 +193,7 @@ def ask_gemini():
 
         url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key={api_key}"
         payload = {"contents": [{"parts": [{"text": f"{system_prompt}\n\nDomanda: \"{user_question}\""}]}]}
-        response = requests.post(url, json=payload)
+        response = requests.post(url, json=payload, headers={'Content-Type': 'application/json'})
         response.raise_for_status()
         
         result = response.json()
