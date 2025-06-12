@@ -205,26 +205,13 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // --- Schermata Finale ---
-   
-function renderCompletionScreen(container, status) {
-    container.innerHTML = `
-        <div class="mission-card completion-card">
-            <h2>🎉 Addestramento Completato!</h2>
-            <p>Nanabot è pronto per essere messo alla prova nel laboratorio.</p>
-            <div class="final-actions">
-                <button id="reset-btn" class="btn btn-secondary">Ricomincia Addestramento</button>
-                <button id="discover-btn" class="btn btn-primary">Entra nel Laboratorio</button>
-            </div>
-        </div>`;
-    
-    document.getElementById('reset-btn').addEventListener('click', resetApp);
-    
-    // MODIFICA: Sostituiamo l'alert con un reindirizzamento alla pagina /lab
-    document.getElementById('discover-btn').addEventListener('click', () => {
-        window.location.href = '/lab';
-    });
-}
-
+    function renderCompletionScreen(container, status) {
+        container.innerHTML = `<div class="mission-card completion-card"><h2>🎉 Addestramento Completato!</h2><p>Nanabot è pronto.</p><div class="final-actions"><button id="reset-btn" class="btn btn-secondary">Ricomincia Addestramento</button><button id="discover-btn" class="btn btn-primary">Scopri il tuo Nanabot!</button></div></div>`;
+        document.getElementById('reset-btn').addEventListener('click', resetApp);
+        document.getElementById('discover-btn').addEventListener('click', () => {
+            alert("Azione non ancora implementata.");
+        });
+    }
     
     // -------------------------------------------------------------------
     // FUNZIONI DI COMUNICAZIONE

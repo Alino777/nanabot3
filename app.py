@@ -1,11 +1,9 @@
-# app.py (Versione Definitiva - Completa e Pronta)
-
 import requests
-import os
+import os  # Per leggere le variabili d'ambiente
 from flask import Flask, jsonify, request, render_template
 from flask_cors import CORS
 
-# --- 1. DATI E CLASSE DI LOGICA ---
+# --- Classe di Logica (DigitalAssistant) ---
 PHILOSOPHY_OPTIONS = {
     "Gestione dello Sgarro": {
         "A": "[METODICO SCIENTIFICO] Lo 'sgarro' è un dato. Analizziamolo per compensare il bilancio calorico settimanale senza impatti.",
@@ -36,57 +34,57 @@ THEMES = list(PHILOSOPHY_OPTIONS.keys())
 
 class DigitalAssistant:
     def __init__(self, name="Nanabot"):
-        # Stato per l'app di addestramento
         self.name = name
         self.training_progress = 0
         self.unlocked_badges = []
         self.philosophy = {}
         self.config = {
             "sources": [],
-            "security": { "keywords": [], "coherence_checks": {} },
-            "resources": {}
-        }
-        
-        # Stato per la "Centrale di Comando" con dati di esempio
-        self.lab_settings = {
-            "assistantEnabled": True,
-            "exceptions": ['Celiachia'],
-            "welcomeMessage": "Ciao {nome_paziente}! Sono il tuo assistente virtuale. Sono qui per aiutarti con il tuo piano alimentare.",
-            "quickQuestions": [
-                { "id": 1, "q": "Cosa posso mangiare a colazione?", "a": "Per colazione, consiglio yogurt greco con frutta fresca e una manciata di mandorle." },
-                { "id": 2, "q": "Quali sono gli spuntini permessi?", "a": "Ottimi spuntini includono frutta, verdura cruda, o una piccola porzione di frutta secca." }
-            ]
+            "security": {
+                "keywords": ["diabete", "gravidanza", "farmaco", "dolore"],
+                "coherence_checks": {
+                    "Celiachia (Senza Glutine)": True,
+                    "Dieta Vegana": True,
+                    "Dieta Vegetariana": True,
+                    "Intolleranza al Lattosio": True,
+                    "Allergie Note": False,
+                    "Favismo": False
+                }
+            },
+            "resources": {"patient_plans": True, "my_content": True, "external_content": False}
         }
 
-    # Metodi per l'addestramento
     def complete_mission(self, mission_number, data):
         if mission_number == 1 and "🏅 Guardiano della Scienza" not in self.unlocked_badges:
             self.training_progress += 25
             self.add_badge("🏅 Guardiano della Scienza")
-            return "Missione 1 completata."
+            self.config["sources"] = data.get("sources", [])
+            return "Perfetto! D'ora in poi Nanabot si baserà solo sui dati scientifici che hai approvato."
         elif mission_number == 2 and "🛡️ Sentinella della Salute" not in self.unlocked_badges:
             self.training_progress += 25
             self.add_badge("🛡️ Sentinella della Salute")
-            return "Missione 2 completata."
+            self.config["security"] = data
+            return "Ottimo! Le antenne di Nanabot ora sono sintonizzate per intercettare le informazioni critiche."
         elif mission_number == 3 and "🚀 Motore Proattivo" not in self.unlocked_badges:
             self.training_progress += 25
             self.add_badge("🚀 Motore Proattivo")
-            return "Missione 3 completata."
+            self.config["resources"] = data
+            return "Fantastico! Hai dato a Nanabot le chiavi della tua 'dispensa di sapienza'."
         return None
-        
+    
     def set_philosophy(self, theme, choice_key):
         if len(self.philosophy) < len(THEMES):
             self.philosophy[theme] = PHILOSOPHY_OPTIONS[theme][choice_key]
         if len(self.philosophy) == len(THEMES) and "🏆 Master Trainer" not in self.unlocked_badges:
             self.training_progress = 100
             self.add_badge("🏆 Master Trainer")
-            return "Congratulazioni, addestramento completato!"
+            return "Congratulazioni, Master Trainer! La personalità di Nanabot è forgiata a tua immagine e somiglianza."
         return None
-
+        
     def add_badge(self, badge: str):
         if badge not in self.unlocked_badges:
             self.unlocked_badges.append(badge)
-            
+        
     def get_status(self):
         return {
             'name': self.name,
@@ -97,12 +95,12 @@ class DigitalAssistant:
             'themes_todo': [t for t in THEMES if t not in self.philosophy]
         }
 
-# --- 2. INIZIALIZZAZIONE FLASK ---
+# --- Inizializzazione Flask ---
 app = Flask(__name__)
 CORS(app, resources={r"/api/*": {"origins": "*"}})
 nanabot = DigitalAssistant()
 
-# --- 3. ROTTE PRINCIPALI ---
+# --- Rotte Esistenti ---
 @app.route('/')
 def home():
     return render_template('index.html')
@@ -111,7 +109,6 @@ def home():
 def supervision_lab():
     return render_template('lab.html')
 
-# --- 4. API PER L'APP DI ADDESTRAMENTO ---
 @app.route('/api/status')
 def status():
     return jsonify(nanabot.get_status())
@@ -123,13 +120,15 @@ def philosophy_options():
 @app.route('/api/complete_mission/<int:mission_number>', methods=['POST'])
 def handle_mission_completion(mission_number):
     message = nanabot.complete_mission(mission_number, request.get_json())
-    return jsonify({'success': True, 'message': message}) if message else (jsonify({'success': False}), 400)
+    if message:
+        return jsonify({'success': True, 'message': message})
+    return jsonify({'success': False, 'message': 'Missione già completata o dati non validi'}), 400
 
 @app.route('/api/select_philosophy', methods=['POST'])
 def handle_philosophy_selection():
     data = request.get_json()
     message = nanabot.set_philosophy(data.get('theme'), data.get('choice'))
-    return jsonify({'success': True, 'message': message})
+    return jsonify({'success': True, 'message': message, 'final_mission_complete': bool(message)})
 
 @app.route('/api/reset', methods=['POST'])
 def reset():
@@ -137,62 +136,56 @@ def reset():
     nanabot = DigitalAssistant()
     return jsonify({'success': True, 'message': 'Addestramento resettato!'})
 
-# --- 5. API PER LA CENTRALE DI COMANDO (/lab) ---
-@app.route('/api/get_lab_settings', methods=['GET'])
-def get_lab_settings():
-    return jsonify(nanabot.lab_settings)
-
-@app.route('/api/update_settings', methods=['POST'])
-def update_settings():
-    data = request.get_json()
-    for key in ['assistantEnabled', 'exceptions', 'welcomeMessage', 'quickQuestions']:
-        if key in data:
-            nanabot.lab_settings[key] = data[key]
-    print("Impostazioni del laboratorio salvate:", nanabot.lab_settings)
-    return jsonify({'success': True, 'message': 'Impostazioni salvate con successo!'})
-
-# --- 6. API CHAT CON LOGICA A 3 LIVELLI E GEMINI ---
+# --- Nuova Rotta Chat con Gemini ---
 @app.route('/api/ask', methods=['POST'])
 def ask_gemini():
     try:
         data = request.get_json()
-        user_question = data.get('question', '').strip()
+        user_question = data.get('question')
         if not user_question:
             return jsonify({'error': 'Domanda mancante'}), 400
 
-        # LIVELLO 3: Controllo la Base di Conoscenza (Domande Rapide)
-        for qq in nanabot.lab_settings.get('quickQuestions', []):
-            if qq['q'].strip().lower() == user_question.lower():
-                print(f"Risposta trovata nella Base di Conoscenza per: {user_question}")
-                return jsonify({'answer': qq['a']})
+        # LIVELLO 2: Estrazione filosofia scelta
+        if nanabot.philosophy:
+            filosofie_scelte = ". ".join(nanabot.philosophy.values())
+        else:
+            filosofie_scelte = "empatico, motivazionale e basato su dati scientifici"
 
-        print(f"Nessuna risposta rapida trovata. Interrogo Gemini per: {user_question}")
-        
-        # LIVELLO 2: Estraggo la filosofia del nutrizionista
-        filosofie_scelte = ". ".join(nanabot.philosophy.values()) if nanabot.philosophy else "empatico e scientifico"
-
-        # LIVELLO 1: Costruisco il prompt di base, con tutte le istruzioni
+        # Costruzione system prompt
         system_prompt = (
-            "Sei Nanabot, un assistente virtuale per un nutrizionista. Il tuo tono è professionale ma empatico. "
-            "Sii conciso. Manda messaggi di massimo 250 caratteri a meno che non sia strettamente necessario per il tema.\n\n"
-            f"La tua filosofia guida è: '{filosofie_scelte}'.\n\n"
-            "Rispondi alla domanda del paziente in modo chiaro e incoraggiante. "
-            "Non esplicitare mai le filosofie scelte dal nutrizionista. "
+            "Sei Nanabot, un assistente virtuale per un nutrizionista."
+            " Il tuo tono è professionale ma empatico. Conciso il più possibile. Manda messaggi di max 250 caratteri a meno che non strettamente necessario per il tema.\n\n"
+            f"La tua filosofia guida è:\n{filosofie_scelte}\n\n"
+            "Rispondi alla domanda del paziente in modo chiaro e incoraggiante. Non esplicitare mai le filosofie scelte dal nutrizionista "
             "Non dare mai consigli medici specifici."
         )
 
+        # Lettura API key da env
         api_key = os.environ.get('GOOGLE_API_KEY', '')
         if not api_key:
-            raise ValueError("Chiave API GOOGLE_API_KEY non impostata nelle variabili d'ambiente.")
+            raise ValueError("La chiave API di Google non è stata impostata nelle variabili d'ambiente.")
 
-        url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key={api_key}"
-        payload = {"contents": [{"parts": [{"text": f"{system_prompt}\n\nDomanda: \"{user_question}\""}]}]}
-        response = requests.post(url, json=payload)
+        url = (
+            "https://generativelanguage.googleapis.com/v1beta/models/"
+            "gemini-2.0-flash:generateContent"
+            f"?key={api_key}"
+        )
+        payload = {
+            "contents": [{"parts": [{"text": f"{system_prompt}\n\nDomanda: \"{user_question}\""}]}]
+        }
+
+        response = requests.post(url, json=payload, headers={'Content-Type': 'application/json'})
+        print(f"Chiamata a Gemini - Status: {response.status_code}, Risposta: {response.text}")
         response.raise_for_status()
-        
+
         result = response.json()
-        return jsonify({'answer': result['candidates'][0]['content']['parts'][0]['text']})
+        bot_response = result['candidates'][0]['content']['parts'][0]['text']
+        return jsonify({'answer': bot_response})
 
     except Exception as e:
         print(f"[ERROR /api/ask]: {e}")
         return jsonify({'error': 'Errore durante la comunicazione con il servizio AI.'}), 500
+
+if __name__ == '__main__':
+    port = int(os.environ.get('PORT', 5000))
+    app.run(host='0.0.0.0', port=port)
